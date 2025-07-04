@@ -44,42 +44,105 @@
       </router-link>
     </div>
 
-    <!-- Lista de equipos -->
-    <div v-else class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      <div 
-        v-for="equipo in equipos" 
-        :key="equipo.id" 
-        class="bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200 rounded-lg shadow-sm p-4 hover:shadow-lg hover:from-orange-100 hover:to-orange-200 transition-all duration-300"
-      >
-        <div class="space-y-2">
-          <div class="flex justify-between items-start">
-            <h3 class="font-semibold text-lg text-gray-800">{{ equipo.nombre }}</h3>
-            <span class="text-sm text-orange-600 bg-orange-200 px-2 py-1 rounded-full">#{{ equipo.id }}</span>
-          </div>
-          
-          <div class="space-y-1 text-sm">
-            <p><span class="font-medium text-gray-700">Tipo:</span> <span class="text-gray-600">{{ equipo.tipo }}</span></p>
-            <p><span class="font-medium text-gray-700">IP:</span> <span class="text-blue-600 font-mono">{{ equipo.ip }}</span></p>
-            <p><span class="font-medium text-gray-700">Piso:</span> <span class="text-gray-600">{{ equipo.piso }}</span></p>
-            <p><span class="font-medium text-gray-700">Oficina:</span> <span class="text-gray-600">{{ equipo.oficina }}</span></p>
-            <p v-if="equipo.usuario"><span class="font-medium text-gray-700">Usuario:</span> <span class="text-purple-600">{{ equipo.usuario }}</span></p>
-          </div>
+    <!-- Tabla de equipos -->
+    <div v-else>
+      <!-- Barra de búsqueda -->
+      <div class="mb-6">
+        <div class="relative w-full md:w-1/2">
+          <input 
+            type="text" 
+            v-model="busqueda" 
+            placeholder="Buscar por nombre, tipo, IP u oficina..." 
+            class="px-4 py-2 pl-10 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+          />
+          <IconSearch class="absolute left-3 top-2.5 text-gray-400" size="20" />
+        </div>
+      </div>
+
+      <!-- Tabla de equipos -->
+      <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Piso</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Oficina</th>
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr v-if="equiposPaginados.length === 0">
+              <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                No se encontraron equipos con los filtros actuales
+              </td>
+            </tr>
+
+            <tr 
+              v-for="(equipo, index) in equiposPaginados" 
+              :key="equipo.id"
+              :class="index % 2 === 0 ? 'bg-white' : 'bg-gray-50'"
+            >
+              <td class="px-6 py-4 text-sm font-medium text-gray-900">#{{ equipo.id }}</td>
+              <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ equipo.nombre }}</td>
+              <td class="px-6 py-4 text-sm text-gray-500">{{ equipo.tipo }}</td>
+              <td class="px-6 py-4 text-sm text-gray-500 font-mono">{{ equipo.ip }}</td>
+              <td class="px-6 py-4 text-sm text-gray-500">{{ equipo.piso }}</td>
+              <td class="px-6 py-4 text-sm text-gray-500">{{ equipo.oficina }}</td>
+              <td class="px-6 py-4 text-center space-x-2">
+                <button 
+                  @click="editarEquipo(equipo)"
+                  class="text-yellow-600 hover:text-yellow-800 px-2 py-1 rounded hover:bg-yellow-50 transition-colors"
+                >
+                  Editar
+                </button>
+                <button 
+                  @click="confirmarEliminacion(equipo)"
+                  class="text-red-600 hover:text-red-800 px-2 py-1 rounded hover:bg-red-50 transition-colors"
+                >
+                  Eliminar
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Paginación mejorada -->
+      <div class="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="text-sm text-gray-500">
+          Mostrando {{ ((paginaActual - 1) * itemsPorPagina) + 1 }} - 
+          {{ Math.min(paginaActual * itemsPorPagina, equiposFiltrados.length) }} 
+          de {{ equiposFiltrados.length }} equipos
         </div>
 
-        <!-- Botones de acción -->
-        <div class="flex gap-2 mt-4 pt-3 border-t border-gray-100">
-          <router-link 
-            :to="`/editar/${equipo.id}`" 
-            class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white text-center px-3 py-2 rounded text-sm transition-colors"
+        <div class="flex gap-1">
+          <button 
+            @click="cambiarPagina(paginaActual - 1)" 
+            :disabled="paginaActual === 1"
+            class="p-2 rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            Editar
-          </router-link>
+            <IconChevronLeft size="20" class="text-gray-600" />
+          </button>
           
           <button 
-            @click="confirmarEliminacion(equipo)" 
-            class="flex-1 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm transition-colors"
+            v-for="page in totalPaginas" 
+            :key="page"
+            @click="cambiarPagina(page)"
+            :class="{'bg-blue-500 text-white': paginaActual === page, 'bg-white text-gray-700': paginaActual !== page}"
+            class="w-10 h-10 rounded border border-gray-300 hover:bg-gray-50 transition-colors"
           >
-            Eliminar
+            {{ page }}
+          </button>
+          
+          <button 
+            @click="cambiarPagina(paginaActual + 1)" 
+            :disabled="paginaActual >= totalPaginas"
+            class="p-2 rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <IconChevronRight size="20" class="text-gray-600" />
           </button>
         </div>
       </div>
@@ -114,7 +177,8 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted } from 'vue';
+import { defineComponent, ref, onMounted, computed } from 'vue';
+import { IconSearch, IconChevronLeft, IconChevronRight } from '@tabler/icons-vue';
 import axios from 'axios';
 import ExcelJS from 'exceljs';
 
@@ -130,35 +194,79 @@ interface Equipo {
 
 export default defineComponent({
   name: 'EquiposList',
+  components: {
+    IconSearch,
+    IconChevronLeft,
+    IconChevronRight
+  },
   setup() {
     const equipos = ref<Equipo[]>([]);
-    const loading = ref(false);
+    const busqueda = ref('');
+    const paginaActual = ref(1);
+    const itemsPorPagina = 5;
+    const loading = ref(true);
     const error = ref('');
     const equipoAEliminar = ref<Equipo | null>(null);
     const eliminando = ref(false);
 
-    const cargarEquipos = async () => {
-      loading.value = true;
-      error.value = '';
-      
-      try {
-        const response = await axios.get('http://localhost:5000/api/equipos');
-        
-        // Manejar la respuesta del backend mejorado
-        if (response.data.data) {
-          equipos.value = response.data.data;
-          // Ordenar equipos por ID al recibir los datos
-          equipos.value.sort((a, b) => a.id - b.id);
-        } else {
-          equipos.value = Array.isArray(response.data) ? response.data : [];
-        }
-      } catch (err: any) {
-        console.error('Error al cargar los equipos:', err);
-        error.value = err.response?.data?.error || 'Error al cargar los equipos';
-        equipos.value = [];
-      } finally {
-        loading.value = false;
+    // Cargar equipos desde la API
+   const cargarEquipos = async () => {
+  loading.value = true;
+  error.value = '';
+  
+  try {
+    const response = await axios.get('http://localhost:5000/api/equipos');
+    
+    // Verifica primero si la respuesta tiene data.data (estructura común en APIs)
+    let datosEquipos = Array.isArray(response.data?.data) ? response.data.data : 
+                     Array.isArray(response.data) ? response.data : [];
+    
+    // Ordena los equipos por ID
+    equipos.value = datosEquipos.sort((a: Equipo, b: Equipo) => a.id - b.id);
+    
+  } catch (err: any) {
+    console.error('Error al cargar equipos:', err);
+    error.value = 'No se pudieron cargar los equipos. ' + 
+                 (err.response?.data?.message || err.message || 'Error desconocido');
+  } finally {
+    loading.value = false;
+  }
+    };
+
+    // Computed properties
+    const equiposFiltrados = computed(() => {
+      if (!busqueda.value.trim()) return equipos.value;
+      const termino = busqueda.value.toLowerCase().trim();
+      return equipos.value.filter(equipo => 
+        (equipo.nombre?.toLowerCase().includes(termino) || 
+         equipo.tipo?.toLowerCase().includes(termino) ||
+         equipo.ip?.toLowerCase().includes(termino) ||
+         equipo.oficina?.toLowerCase().includes(termino) ||
+         equipo.piso?.toLowerCase().includes(termino))
+      );
+    });
+
+    const equiposPaginados = computed(() => {
+      const inicio = (paginaActual.value - 1) * itemsPorPagina;
+      const fin = inicio + itemsPorPagina;
+      return equiposFiltrados.value.slice(inicio, fin);
+    });
+
+    const totalPaginas = computed(() => 
+      Math.ceil(equiposFiltrados.value.length / itemsPorPagina)
+    );
+
+    // Métodos
+    const cambiarPagina = (pagina: number) => {
+      if (pagina >= 1 && pagina <= totalPaginas.value) {
+        paginaActual.value = pagina;
       }
+    };
+
+    const editarEquipo = (equipo: Equipo) => {
+      console.log('Editar equipo:', equipo);
+      // Aquí deberías navegar a la página de edición
+      // this.$router.push(`/editar/${equipo.id}`);
     };
 
     const confirmarEliminacion = (equipo: Equipo) => {
@@ -175,17 +283,12 @@ export default defineComponent({
       eliminando.value = true;
       
       try {
-        await axios.delete(`http://localhost:5000/api/equipo/${equipoAEliminar.value.id}`);
-        
-        // Remover el equipo de la lista local
+        await axios.delete(`http://localhost:5000/api/equipos/${equipoAEliminar.value.id}`);
         equipos.value = equipos.value.filter(e => e.id !== equipoAEliminar.value!.id);
-        
-        // Cerrar el modal
         equipoAEliminar.value = null;
-        
       } catch (err: any) {
-        console.error('Error al eliminar el equipo:', err);
-        error.value = err.response?.data?.error || 'Error al eliminar el equipo';
+        console.error('Error al eliminar equipo:', err);
+        error.value = 'Error al eliminar el equipo: ' + (err.response?.data?.message || err.message || 'Error desconocido');
       } finally {
         eliminando.value = false;
       }
@@ -198,7 +301,7 @@ export default defineComponent({
       }
 
       try {
-        const equiposOrdenados = equipos.value.sort((a, b) => a.id - b.id);
+        const equiposOrdenados = [...equipos.value].sort((a, b) => a.id - b.id);
 
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Equipos');
@@ -288,40 +391,60 @@ export default defineComponent({
       }
     };
 
-    onMounted(() => {
-      cargarEquipos();
-    });
+    // Cargar datos al montar el componente
+    onMounted(cargarEquipos);
 
     return {
       equipos,
+      busqueda,
+      paginaActual,
+      itemsPorPagina,
       loading,
       error,
       equipoAEliminar,
       eliminando,
+      equiposFiltrados,
+      equiposPaginados,
+      totalPaginas,
       cargarEquipos,
+      cambiarPagina,
+      editarEquipo,
       confirmarEliminacion,
       cancelarEliminacion,
       eliminarEquipo,
-      exportarEquipos,
+      exportarEquipos
     };
-  },
+  }
 });
 </script>
 
 <style scoped>
-/* Estilos adicionales si es necesario */
+/* Estilos mejorados */
 .transition-colors {
-  transition: background-color 0.2s ease-in-out;
+  transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
 }
 
-.transition-shadow {
-  transition: box-shadow 0.2s ease-in-out;
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.animate-spin {
+  animation: spin 1s linear infinite;
 }
 
-/* Responsive grid */
-@media (max-width: 768px) {
-  .grid {
-    grid-template-columns: 1fr;
+/* Responsive */
+@media (max-width: 640px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  table {
+    font-size: 0.875rem;
+  }
+  
+  td, th {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
   }
 }
 </style>
