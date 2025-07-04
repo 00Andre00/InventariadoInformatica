@@ -147,6 +147,8 @@ export default defineComponent({
         // Manejar la respuesta del backend mejorado
         if (response.data.data) {
           equipos.value = response.data.data;
+          // Ordenar equipos por ID al recibir los datos
+          equipos.value.sort((a, b) => a.id - b.id);
         } else {
           equipos.value = Array.isArray(response.data) ? response.data : [];
         }
@@ -196,13 +198,11 @@ export default defineComponent({
       }
 
       try {
-        // Ordenar los equipos por 'id' antes de agregarlos al archivo Excel
         const equiposOrdenados = equipos.value.sort((a, b) => a.id - b.id);
 
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Equipos');
 
-        // Configurar columnas
         worksheet.columns = [
           { header: 'ID', key: 'id', width: 10 },
           { header: 'Nombre', key: 'nombre', width: 30 },
@@ -213,7 +213,6 @@ export default defineComponent({
           { header: 'Usuario', key: 'usuario', width: 25 },
         ];
 
-        // Estilo para las cabeceras hasta la columna "Usuario" (columna G)
         for (let col = 1; col <= 7; col++) {  // De la columna 1 a la 7 (A a G)
           const cell = worksheet.getCell(1, col);
           cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };  // Blanco
@@ -225,7 +224,6 @@ export default defineComponent({
         }
         worksheet.getRow(1).height = 25;  // Altura aumentada para las cabeceras
 
-        // Agregar datos y aplicar colores de fondo alternos
         equiposOrdenados.forEach((equipo, index) => {
           const row = worksheet.addRow({
             id: equipo.id,
@@ -237,7 +235,6 @@ export default defineComponent({
             usuario: equipo.usuario || 'N/A',
           });
 
-          // Alternar colores de fondo para las filas
           if (index % 2 === 0) {
             row.fill = {
               type: 'pattern',
@@ -252,7 +249,6 @@ export default defineComponent({
             };
           }
 
-          // Aplicar bordes grises en todas las celdas
           row.eachCell((cell) => {
             cell.border = {
               top: { style: 'thin', color: { argb: 'FFCCCCCC' } },
@@ -261,21 +257,17 @@ export default defineComponent({
               right: { style: 'thin', color: { argb: 'FFCCCCCC' } },
             };
 
-            // Centrar el contenido horizontal y verticalmente
             cell.alignment = {
               vertical: 'middle',
               horizontal: 'center',
             };
           });
 
-          // Ajustar la altura de las filas
           row.height = 20;
         });
 
-        // Agregar filtros a las cabeceras
         worksheet.autoFilter = 'A1:G1';
 
-        // Generar archivo y descargar
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], {
           type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -288,7 +280,6 @@ export default defineComponent({
         link.click();
         document.body.removeChild(link);
 
-        // Limpiar URL
         URL.revokeObjectURL(link.href);
 
       } catch (err) {
