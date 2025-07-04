@@ -1,24 +1,29 @@
 <template>
   <div id="app">
-    <AgregarEquipo />
-    <EquiposList />
+    <!-- Barra de navegación -->
+    <nav class="bg-gray-800 text-white p-4">
+      <ul class="flex space-x-4">
+        <li>
+          <router-link to="/" class="hover:text-green-400">Ver Equipos</router-link>
+        </li>
+        <li>
+          <router-link to="/agregar" class="hover:text-green-400">Agregar Equipo</router-link>
+        </li>
+      </ul>
+    </nav>
+    <!-- Vista renderizada según la ruta -->
+    <router-view />  
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import AgregarEquipo from './components/AgregarEquipo.vue';
-import EquiposList from './components/EquiposList.vue';
 
 export default defineComponent({
   name: 'App',
-  components: {
-    AgregarEquipo,
-    EquiposList,
-  },
 });
 </script>
 
 <style scoped>
-/* Puedes agregar estilos globales aquí */
+/* Estilos globales */
 </style>
