@@ -181,6 +181,7 @@ import { defineComponent, ref, onMounted, computed } from 'vue';
 import { IconSearch, IconChevronLeft, IconChevronRight } from '@tabler/icons-vue';
 import axios from 'axios';
 import ExcelJS from 'exceljs';
+import { useRouter } from 'vue-router';
 
 interface Equipo {
   id: number;
@@ -200,6 +201,7 @@ export default defineComponent({
     IconChevronRight
   },
   setup() {
+    const router = useRouter();
     const equipos = ref<Equipo[]>([]);
     const busqueda = ref('');
     const paginaActual = ref(1);
@@ -210,27 +212,21 @@ export default defineComponent({
     const eliminando = ref(false);
 
     // Cargar equipos desde la API
-   const cargarEquipos = async () => {
-  loading.value = true;
-  error.value = '';
-  
-  try {
-    const response = await axios.get('http://localhost:5000/api/equipos');
-    
-    // Verifica primero si la respuesta tiene data.data (estructura común en APIs)
-    let datosEquipos = Array.isArray(response.data?.data) ? response.data.data : 
-                     Array.isArray(response.data) ? response.data : [];
-    
-    // Ordena los equipos por ID
-    equipos.value = datosEquipos.sort((a: Equipo, b: Equipo) => a.id - b.id);
-    
-  } catch (err: any) {
-    console.error('Error al cargar equipos:', err);
-    error.value = 'No se pudieron cargar los equipos. ' + 
-                 (err.response?.data?.message || err.message || 'Error desconocido');
-  } finally {
-    loading.value = false;
-  }
+    const cargarEquipos = async () => {
+      loading.value = true;
+      error.value = '';
+      
+      try {
+        const response = await axios.get('http://localhost:5000/api/equipos');
+        equipos.value = response.data.data;
+        equipos.value.sort((a: Equipo, b: Equipo) => a.id - b.id);
+      } catch (err: any) {
+        console.error('Error al cargar equipos:', err);
+        error.value = 'No se pudieron cargar los equipos. ' + 
+                     (err.response?.data?.message || err.message || 'Error desconocido');
+      } finally {
+        loading.value = false;
+      }
     };
 
     // Computed properties
@@ -265,8 +261,7 @@ export default defineComponent({
 
     const editarEquipo = (equipo: Equipo) => {
       console.log('Editar equipo:', equipo);
-      // Aquí deberías navegar a la página de edición
-      // this.$router.push(`/editar/${equipo.id}`);
+      router.push(`/editar/${equipo.id}`);
     };
 
     const confirmarEliminacion = (equipo: Equipo) => {
@@ -278,12 +273,17 @@ export default defineComponent({
     };
 
     const eliminarEquipo = async () => {
-      if (!equipoAEliminar.value) return;
+      if (!equipoAEliminar.value) {
+        console.log("No hay equipo seleccionado para eliminar.");
+        return;
+      }
 
       eliminando.value = true;
-      
+
       try {
+        // URL actualizada para usar la ruta plural
         await axios.delete(`http://localhost:5000/api/equipos/${equipoAEliminar.value.id}`);
+        
         equipos.value = equipos.value.filter(e => e.id !== equipoAEliminar.value!.id);
         equipoAEliminar.value = null;
       } catch (err: any) {
@@ -293,103 +293,96 @@ export default defineComponent({
         eliminando.value = false;
       }
     };
+const exportarEquipos = async () => {
+  if (equipos.value.length === 0) {
+    alert('No hay equipos para exportar');
+    return;
+  }
 
-    const exportarEquipos = async () => {
-      if (equipos.value.length === 0) {
-        alert('No hay equipos para exportar');
-        return;
-      }
+  try {
+    const equiposOrdenados = [...equipos.value].sort((a: Equipo, b: Equipo) => a.id - b.id);
 
-      try {
-        const equiposOrdenados = [...equipos.value].sort((a, b) => a.id - b.id);
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Equipos');
 
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Equipos');
+    worksheet.columns = [
+      { header: 'ID', key: 'id', width: 10 },
+      { header: 'Nombre', key: 'nombre', width: 30 },
+      { header: 'Tipo', key: 'tipo', width: 20 },
+      { header: 'IP', key: 'ip', width: 15 },
+      { header: 'Piso', key: 'piso', width: 10 },
+      { header: 'Oficina', key: 'oficina', width: 20 },
+      { header: 'Usuario', key: 'usuario', width: 25 },
+    ];
 
-        worksheet.columns = [
-          { header: 'ID', key: 'id', width: 10 },
-          { header: 'Nombre', key: 'nombre', width: 30 },
-          { header: 'Tipo', key: 'tipo', width: 20 },
-          { header: 'IP', key: 'ip', width: 15 },
-          { header: 'Piso', key: 'piso', width: 10 },
-          { header: 'Oficina', key: 'oficina', width: 20 },
-          { header: 'Usuario', key: 'usuario', width: 25 },
-        ];
+    // Estilo para las cabeceras
+    for (let col = 1; col <= 7; col++) {
+      const cell = worksheet.getCell(1, col);
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFFF7A00' },
+      };
+    }
+    worksheet.getRow(1).height = 25;
 
-        for (let col = 1; col <= 7; col++) {  // De la columna 1 a la 7 (A a G)
-          const cell = worksheet.getCell(1, col);
-          cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };  // Blanco
-          cell.fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FFFF7A00' },  // Fondo naranja
-          };
-        }
-        worksheet.getRow(1).height = 25;  // Altura aumentada para las cabeceras
+    // Añadir datos
+    equiposOrdenados.forEach((equipo, index) => {
+      const row = worksheet.addRow({
+        id: equipo.id,
+        nombre: equipo.nombre,
+        tipo: equipo.tipo,
+        ip: equipo.ip,
+        piso: equipo.piso,
+        oficina: equipo.oficina,
+        usuario: equipo.usuario || 'N/A',
+      });
 
-        equiposOrdenados.forEach((equipo, index) => {
-          const row = worksheet.addRow({
-            id: equipo.id,
-            nombre: equipo.nombre,
-            tipo: equipo.tipo,
-            ip: equipo.ip,
-            piso: equipo.piso,
-            oficina: equipo.oficina,
-            usuario: equipo.usuario || 'N/A',
-          });
+      // Alternar colores de fondo
+      row.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: index % 2 === 0 ? 'FFF0F0F0' : 'FFFFFFFF' },
+      };
 
-          if (index % 2 === 0) {
-            row.fill = {
-              type: 'pattern',
-              pattern: 'solid',
-              fgColor: { argb: 'FFF0F0F0' },  // Fondo gris claro
-            };
-          } else {
-            row.fill = {
-              type: 'pattern',
-              pattern: 'solid',
-              fgColor: { argb: 'FFFFFFFF' },  // Fondo blanco
-            };
-          }
+      // Estilo de bordes y alineación
+      row.eachCell((cell) => {
+        cell.border = {
+          top: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+          left: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+          bottom: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+          right: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+        };
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+      });
 
-          row.eachCell((cell) => {
-            cell.border = {
-              top: { style: 'thin', color: { argb: 'FFCCCCCC' } },
-              left: { style: 'thin', color: { argb: 'FFCCCCCC' } },
-              bottom: { style: 'thin', color: { argb: 'FFCCCCCC' } },
-              right: { style: 'thin', color: { argb: 'FFCCCCCC' } },
-            };
+      row.height = 20;
+    });
 
-            cell.alignment = {
-              vertical: 'middle',
-              horizontal: 'center',
-            };
-          });
+    // Auto-filtros
+    worksheet.autoFilter = 'A1:G1';
 
-          row.height = 20;
-        });
+    // Generar el archivo Excel
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
 
-        worksheet.autoFilter = 'A1:G1';
+    // Crear enlace de descarga
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `equipos_${new Date().toISOString().split('T')[0]}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
 
-        const buffer = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buffer], {
-          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        });
-
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `equipos_${new Date().toISOString().split('T')[0]}.xlsx`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        URL.revokeObjectURL(link.href);
-
-      } catch (err) {
-        console.error('Error al exportar equipos:', err);
-        error.value = 'Error al exportar equipos a Excel';
-      }
-    };
+  } catch (err) {
+    console.error('Error al exportar equipos:', err);
+    error.value = 'Error al exportar equipos a Excel';
+  }
+};
 
     // Cargar datos al montar el componente
     onMounted(cargarEquipos);
@@ -419,7 +412,6 @@ export default defineComponent({
 </script>
 
 <style scoped>
-/* Estilos mejorados */
 .transition-colors {
   transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
 }
@@ -431,7 +423,6 @@ export default defineComponent({
   animation: spin 1s linear infinite;
 }
 
-/* Responsive */
 @media (max-width: 640px) {
   .container {
     padding-left: 1rem;

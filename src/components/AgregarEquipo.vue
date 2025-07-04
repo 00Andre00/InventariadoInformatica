@@ -50,7 +50,7 @@ export default defineComponent({
 
     const agregarEquipo = async () => {
       try {
-        await axios.post('http://localhost:5000/api/equipo', nuevoEquipo.value);
+        await axios.post('http://localhost:5000/api/equipos', nuevoEquipo.value);
         alert('Equipo agregado correctamente');
         // Resetear el formulario
         nuevoEquipo.value = { nombre: '', tipo: '', ip: '', piso: '', oficina: '', usuario: '' };
