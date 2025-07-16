@@ -1,31 +1,43 @@
 <template>
-  <div class="p-4 border">
-    <h2 class="text-lg font-semibold mb-4">Editar Equipo</h2>
+  <div class="container mx-auto p-4">
+    <h2 class="text-2xl font-semibold mb-4">Editar Equipo</h2>
     <form @submit.prevent="actualizarEquipo">
-      <div class="mb-2">
+      <!-- Campos del formulario para editar el equipo -->
+      <div class="mb-4">
         <label for="nombre" class="block">Nombre</label>
         <input v-model="equipo.nombre" id="nombre" type="text" class="input" required />
       </div>
-      <div class="mb-2">
+
+      <div class="mb-4">
         <label for="tipo" class="block">Tipo</label>
         <input v-model="equipo.tipo" id="tipo" type="text" class="input" required />
       </div>
-      <div class="mb-2">
+
+      <div class="mb-4">
         <label for="ip" class="block">IP</label>
         <input v-model="equipo.ip" id="ip" type="text" class="input" required />
       </div>
-      <div class="mb-2">
+
+      <div class="mb-4">
         <label for="piso" class="block">Piso</label>
         <input v-model="equipo.piso" id="piso" type="text" class="input" required />
       </div>
-      <div class="mb-2">
+
+      <div class="mb-4">
         <label for="oficina" class="block">Oficina</label>
         <input v-model="equipo.oficina" id="oficina" type="text" class="input" required />
       </div>
-      <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Actualizar</button>
+
+      <div class="mb-4">
+        <label for="numeroSerie" class="block">Número de Serie</label>
+        <input v-model="equipo.numeroSerie" id="numeroSerie" type="text" class="input" required />
+      </div>
+
+      <!-- Botón para actualizar -->
+      <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg">Actualizar</button>
     </form>
 
-    <!-- Botón de eliminación del equipo -->
+    <!-- Botón para eliminar el equipo -->
     <button @click="eliminarEquipo" class="bg-red-500 text-white px-4 py-2 rounded mt-4">
       Eliminar Equipo
     </button>
@@ -40,58 +52,61 @@ import { useRoute, useRouter } from 'vue-router';
 export default defineComponent({
   name: 'EditarEquipo',
   setup() {
-    const equipo = ref<any>({});
+    const equipo = ref<any>({
+      nombre: '',
+      tipo: '',
+      ip: '',
+      piso: '',
+      oficina: '',
+      numeroSerie: ''
+    });
     const route = useRoute();
     const router = useRouter();
 
-    // Cargar el equipo a editar desde el backend
-const cargarEquipo = async () => {
-  try {
-const response = await axios.get(`http://localhost:5000/api/equipos/${route.params.id}`);
-    equipo.value = response.data.data; // Asegúrate de que la propiedad data esté bien definida
-  } catch (error) {
-    console.error('Error al cargar el equipo', error);
-  }
-};
+    // Cargar los datos del equipo
+    const cargarEquipo = async () => {
+      try {
+        const response = await axios.get(`http://localhost:5000/api/equipos/${route.params.id}`);
+        equipo.value = response.data.data;
+      } catch (error) {
+        console.error('Error al cargar el equipo', error);
+      }
+    };
 
-
-    // Actualizar equipo
-const actualizarEquipo = async () => {
-  try {
-await axios.put(`http://localhost:5000/api/equipos/${route.params.id}`, equipo.value);
-    alert('Equipo actualizado correctamente');
-    router.push('/');  // Redirigir a la lista de equipos
-  } catch (error) {
-    console.error('Error al actualizar el equipo', error);
-  }
-};
-
+    // Actualizar el equipo
+    const actualizarEquipo = async () => {
+      try {
+        await axios.put(`http://localhost:5000/api/equipos/${route.params.id}`, equipo.value);
+        alert('Equipo actualizado correctamente');
+        router.push('/equipos');
+      } catch (error) {
+        console.error('Error al actualizar el equipo', error);
+      }
+    };
 
     // Eliminar el equipo
-const eliminarEquipo = async () => {
-  try {
-    const confirmation = confirm('¿Estás seguro de que deseas eliminar este equipo? Esta acción no se puede deshacer.');
-    if (confirmation) {
-      await axios.delete(`http://localhost:5000/api/equipo/${route.params.id}`);
-      alert('Equipo eliminado correctamente');
-      router.push('/');  // Redirigir a la lista de equipos después de eliminar
-    }
-  } catch (error) {
-    console.error('Error al eliminar el equipo', error);
-    alert('Hubo un error al intentar eliminar el equipo');
-  }
-};
+    const eliminarEquipo = async () => {
+      try {
+        const confirmation = confirm('¿Estás seguro de que deseas eliminar este equipo?');
+        if (confirmation) {
+          await axios.delete(`http://localhost:5000/api/equipos/${route.params.id}`);
+          alert('Equipo eliminado correctamente');
+          router.push('/equipos');
+        }
+      } catch (error) {
+        console.error('Error al eliminar el equipo', error);
+        alert('Hubo un error al intentar eliminar el equipo');
+      }
+    };
 
-
-    // Cargar el equipo cuando el componente esté montado
     onMounted(() => {
-      cargarEquipo();
+      cargarEquipo(); // Cargar los datos del equipo al montar el componente
     });
 
     return {
       equipo,
       actualizarEquipo,
-      eliminarEquipo,
+      eliminarEquipo
     };
   },
 });

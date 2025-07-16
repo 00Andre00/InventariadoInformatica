@@ -22,10 +22,13 @@
         <label for="oficina" class="block">Oficina</label>
         <input v-model="nuevoEquipo.oficina" id="oficina" type="text" class="input" required />
       </div>
-      <!-- Agregar el campo 'usuario' -->
       <div class="mb-2">
         <label for="usuario" class="block">Usuario</label>
         <input v-model="nuevoEquipo.usuario" id="usuario" type="text" class="input" required />
+      </div>
+      <div class="mb-2">
+        <label for="numeroSerie" class="block">Número de Serie</label>
+        <input v-model="nuevoEquipo.numeroSerie" id="numeroSerie" type="text" class="input" required />
       </div>
       <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Agregar</button>
     </form>
@@ -45,7 +48,8 @@ export default defineComponent({
       ip: '',
       piso: '',
       oficina: '',
-      usuario: ''  // Agregar 'usuario' al objeto de equipo
+      usuario: '',
+      numeroSerie: '',  // Agregado el campo 'numeroSerie'
     });
 
     const agregarEquipo = async () => {
@@ -53,7 +57,7 @@ export default defineComponent({
         await axios.post('http://localhost:5000/api/equipos', nuevoEquipo.value);
         alert('Equipo agregado correctamente');
         // Resetear el formulario
-        nuevoEquipo.value = { nombre: '', tipo: '', ip: '', piso: '', oficina: '', usuario: '' };
+        nuevoEquipo.value = { nombre: '', tipo: '', ip: '', piso: '', oficina: '', usuario: '', numeroSerie: '' };
       } catch (error) {
         console.error('Error al agregar el equipo', error);
         alert('Hubo un error al agregar el equipo');
