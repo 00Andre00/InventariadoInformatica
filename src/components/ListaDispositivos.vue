@@ -116,17 +116,17 @@
                   <div class="flex justify-center space-x-1">
                     <button 
                       @click="editarDispositivo(dispositivo)"
-                      class="btn-action text-blue-600 hover:bg-blue-50"
+                      class="btn-action bg-gray-800 text-white hover:bg-gray-700"
                       title="Editar"
                     >
-                      <i class="fas fa-edit text-sm"></i>
+                      <i class="fas fa-edit"></i>
                     </button>
                     <button 
                       @click="confirmarEliminacion(dispositivo)"
-                      class="btn-action text-red-600 hover:bg-red-50"
+                      class="btn-action bg-gray-800 text-white hover:bg-gray-700"
                       title="Eliminar"
                     >
-                      <i class="fas fa-trash text-sm"></i>
+                      <i class="fas fa-trash"></i>
                     </button>
                   </div>
                 </td>
@@ -496,7 +496,7 @@ export default defineComponent({
 }
 
 .btn-action {
-  @apply inline-flex items-center justify-center p-2 rounded-full hover:bg-opacity-20 transition-colors focus:outline-none;
+  @apply inline-flex items-center justify-center p-2 rounded-full bg-gray-800 text-white hover:bg-gray-700 transition-colors focus:outline-none;
 }
 
 .btn-cancel {
