@@ -11,7 +11,7 @@
       <form @submit.prevent="agregarImpresora" class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label for="nombre" class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+            <label for="nombre" class="block text-sm font-medium text-gray-700 mb-1">Nombre*</label>
             <input 
               v-model="nuevaImpresora.nombre" 
               id="nombre" 
@@ -22,7 +22,7 @@
           </div>
           
           <div>
-            <label for="tipo" class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+            <label for="tipo" class="block text-sm font-medium text-gray-700 mb-1">Tipo*</label>
             <input 
               v-model="nuevaImpresora.tipo" 
               id="tipo" 
@@ -33,7 +33,7 @@
           </div>
           
           <div>
-            <label for="ip" class="block text-sm font-medium text-gray-700 mb-1">IP</label>
+            <label for="ip" class="block text-sm font-medium text-gray-700 mb-1">IP*</label>
             <input 
               v-model="nuevaImpresora.ip" 
               id="ip" 
@@ -44,7 +44,7 @@
           </div>
           
           <div>
-            <label for="piso" class="block text-sm font-medium text-gray-700 mb-1">Piso</label>
+            <label for="piso" class="block text-sm font-medium text-gray-700 mb-1">Piso*</label>
             <input 
               v-model="nuevaImpresora.piso" 
               id="piso" 
@@ -55,7 +55,7 @@
           </div>
           
           <div>
-            <label for="oficina" class="block text-sm font-medium text-gray-700 mb-1">Oficina</label>
+            <label for="oficina" class="block text-sm font-medium text-gray-700 mb-1">Oficina*</label>
             <input 
               v-model="nuevaImpresora.oficina" 
               id="oficina" 
@@ -66,7 +66,7 @@
           </div>
           
           <div>
-            <label for="recurso" class="block text-sm font-medium text-gray-700 mb-1">Recurso</label>
+            <label for="recurso" class="block text-sm font-medium text-gray-700 mb-1">Recurso*</label>
             <input 
               v-model="nuevaImpresora.recurso" 
               id="recurso" 
@@ -77,7 +77,7 @@
           </div>
           
           <div>
-            <label for="modeloRecurso" class="block text-sm font-medium text-gray-700 mb-1">Modelo Recurso</label>
+            <label for="modeloRecurso" class="block text-sm font-medium text-gray-700 mb-1">Modelo Recurso*</label>
             <input 
               v-model="nuevaImpresora.modeloRecurso" 
               id="modeloRecurso" 
@@ -88,7 +88,7 @@
           </div>
           
           <div>
-            <label for="numeroSerie" class="block text-sm font-medium text-gray-700 mb-1">Número de Serie</label>
+            <label for="numeroSerie" class="block text-sm font-medium text-gray-700 mb-1">Número de Serie*</label>
             <input 
               v-model="nuevaImpresora.numeroSerie" 
               id="numeroSerie" 
@@ -99,21 +99,16 @@
           </div>
         </div>
 
-        <div class="flex justify-between pt-4">
+        <div class="pt-4">
           <button 
             type="submit" 
             class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors"
             :disabled="loading"
           >
-            {{ loading ? 'Agregando...' : 'Agregar Impresora' }}
-          </button>
-          
-          <button 
-            @click="limpiarFormulario" 
-            type="button"
-            class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition-colors"
-          >
-            Limpiar Formulario
+            <span v-if="loading">
+              <i class="fas fa-circle-notch fa-spin mr-2"></i> Procesando...
+            </span>
+            <span v-else>Agregar Impresora</span>
           </button>
         </div>
       </form>
@@ -124,7 +119,6 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
 import axios from 'axios';
-import { useRouter } from 'vue-router';
 
 interface NuevaImpresora {
   nombre: string;
@@ -140,7 +134,6 @@ interface NuevaImpresora {
 export default defineComponent({
   name: 'AgregarImpresora',
   setup() {
-    const router = useRouter();
     const loading = ref(false);
     
     const nuevaImpresora = ref<NuevaImpresora>({
@@ -154,34 +147,27 @@ export default defineComponent({
       numeroSerie: ''
     });
 
-    const limpiarFormulario = () => {
-      nuevaImpresora.value = {
-        nombre: '',
-        tipo: '',
-        ip: '',
-        piso: '',
-        oficina: '',
-        recurso: '',
-        modeloRecurso: '',
-        numeroSerie: ''
-      };
-    };
-
     const agregarImpresora = async () => {
       try {
         loading.value = true;
         await axios.post('http://localhost:5000/api/impresoras', nuevaImpresora.value);
         alert('Impresora agregada correctamente');
-        limpiarFormulario();
         
-        // Opcionalmente redirigir a la lista
-        const redirectToList = confirm('¿Deseas ir a la lista de impresoras?');
-        if (redirectToList) {
-          router.push('/impresoras');
-        }
+        // Limpiar el formulario automáticamente
+        nuevaImpresora.value = {
+          nombre: '',
+          tipo: '',
+          ip: '',
+          piso: '',
+          oficina: '',
+          recurso: '',
+          modeloRecurso: '',
+          numeroSerie: ''
+        };
+        
       } catch (error) {
         console.error('Error al agregar la impresora', error);
-        alert('Error al agregar la impresora');
+        alert('Error al agregar la impresora. Por favor, intente nuevamente.');
       } finally {
         loading.value = false;
       }
@@ -190,8 +176,7 @@ export default defineComponent({
     return {
       nuevaImpresora,
       loading,
-      agregarImpresora,
-      limpiarFormulario,
+      agregarImpresora
     };
   },
 });
