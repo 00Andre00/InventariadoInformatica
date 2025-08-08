@@ -262,7 +262,7 @@ export default defineComponent({
       error.value = '';
 
       try {
-        const response = await axios.get('http://localhost:5000/api/impresoras');
+        const response = await axios.get('https://isiback.drtchco.gob.pe/api/impresoras');
         impresoras.value = response.data.data;
         impresoras.value.sort((a: Impresora, b: Impresora) => a.id - b.id);
       } catch (err: any) {
@@ -341,7 +341,7 @@ export default defineComponent({
       eliminando.value = true;
 
       try {
-        await axios.delete(`http://localhost:5000/api/impresoras/${impresoraAEliminar.value.id}`);
+        await axios.delete(`https://isiback.drtchco.gob.pe/api/impresoras/${impresoraAEliminar.value.id}`);
         impresoras.value = impresoras.value.filter(i => i.id !== impresoraAEliminar.value!.id);
         impresoraAEliminar.value = null;
       } catch (err: any) {

@@ -150,7 +150,7 @@ export default defineComponent({
     const agregarImpresora = async () => {
       try {
         loading.value = true;
-        await axios.post('http://localhost:5000/api/impresoras', nuevaImpresora.value);
+        await axios.post('https://isiback.drtchco.gob.pe/api/impresoras', nuevaImpresora.value);
         alert('Impresora agregada correctamente');
         
         // Limpiar el formulario automáticamente

@@ -159,7 +159,7 @@ export default defineComponent({
     const cargarImpresora = async () => {
       try {
         loading.value = true;
-        const response = await axios.get(`http://localhost:5000/api/impresoras/${route.params.id}`);
+        const response = await axios.get(`https://isiback.drtchco.gob.pe/api/impresoras/${route.params.id}`);
         impresora.value = response.data.data;
       } catch (error) {
         console.error('Error al cargar la impresora', error);
@@ -172,7 +172,7 @@ export default defineComponent({
     const actualizarImpresora = async () => {
       try {
         loading.value = true;
-        await axios.put(`http://localhost:5000/api/impresoras/${route.params.id}`, impresora.value);
+        await axios.put(`https://isiback.drtchco.gob.pe/api/impresoras/${route.params.id}`, impresora.value);
         alert('Impresora actualizada correctamente');
         router.push('/impresoras');
       } catch (error) {
@@ -188,7 +188,7 @@ export default defineComponent({
         const confirmation = confirm('¿Estás seguro de que deseas eliminar esta impresora?');
         if (confirmation) {
           loading.value = true;
-          await axios.delete(`http://localhost:5000/api/impresoras/${route.params.id}`);
+          await axios.delete(`https://isiback.drtchco.gob.pe/api/impresoras/${route.params.id}`);
           alert('Impresora eliminada correctamente');
           router.push('/impresoras');
         }
