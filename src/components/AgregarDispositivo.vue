@@ -49,7 +49,7 @@ export default defineComponent({
 
     const agregarDispositivo = async () => {
       try {
-        await axios.post('http://localhost:5000/api/dispositivos', nuevoDispositivo.value);
+        await axios.post('https://isiback.drtchco.gob.pe/api/dispositivos', nuevoDispositivo.value);
         alert('Dispositivo agregado correctamente');
         // Resetear el formulario
         nuevoDispositivo.value = { nombre: '', tipo: '', piso: '', oficina: '', cantidad: 0, numeroSerie: '' };

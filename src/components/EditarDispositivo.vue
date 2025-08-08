@@ -58,7 +58,7 @@ export default defineComponent({
     // Cargar dispositivo desde la API
     const cargarDispositivo = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/dispositivos/${route.params.id}`);
+        const response = await axios.get(`https://isiback.drtchco.gob.pe/api/dispositivos/${route.params.id}`);
         dispositivo.value = response.data.data;
       } catch (error) {
         console.error('Error al cargar el dispositivo', error);
@@ -69,7 +69,7 @@ export default defineComponent({
     // Actualizar dispositivo
     const actualizarDispositivo = async () => {
       try {
-        await axios.put(`http://localhost:5000/api/dispositivos/${route.params.id}`, dispositivo.value);
+        await axios.put(`https://isiback.drtchco.gob.pe/api/dispositivos/${route.params.id}`, dispositivo.value);
         alert('Dispositivo actualizado correctamente');
         router.push('/dispositivos'); // Redirigir a la lista de dispositivos
       } catch (error) {
@@ -83,7 +83,7 @@ export default defineComponent({
       try {
         const confirmation = confirm('¿Estás seguro de que deseas eliminar este dispositivo?');
         if (confirmation) {
-          await axios.delete(`http://localhost:5000/api/dispositivos/${route.params.id}`);
+          await axios.delete(`https://isiback.drtchco.gob.pe/api/dispositivos/${route.params.id}`);
           alert('Dispositivo eliminado correctamente');
           router.push('/dispositivos'); // Redirigir después de eliminar
         }

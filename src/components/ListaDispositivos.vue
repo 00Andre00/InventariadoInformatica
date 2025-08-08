@@ -257,7 +257,7 @@ export default defineComponent({
       error.value = '';
 
       try {
-        const response = await axios.get('http://localhost:5000/api/dispositivos');
+        const response = await axios.get('https://isiback.drtchco.gob.pe/api/dispositivos');
         dispositivos.value = response.data.data;
         dispositivos.value.sort((a: Dispositivo, b: Dispositivo) => a.id - b.id);
       } catch (err: any) {
@@ -335,7 +335,7 @@ export default defineComponent({
       eliminando.value = true;
 
       try {
-        await axios.delete(`http://localhost:5000/api/dispositivos/${dispositivoAEliminar.value.id}`);
+        await axios.delete(`https://isiback.drtchco.gob.pe/api/dispositivos/${dispositivoAEliminar.value.id}`);
         dispositivos.value = dispositivos.value.filter(d => d.id !== dispositivoAEliminar.value!.id);
         dispositivoAEliminar.value = null;
       } catch (err: any) {
