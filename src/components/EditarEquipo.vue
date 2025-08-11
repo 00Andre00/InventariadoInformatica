@@ -125,7 +125,7 @@ export default defineComponent({
 
     const cargarEquipo = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/equipos/${route.params.id}`);
+        const response = await axios.get(`https://isiback.drtchco.gob.pe/api/equipos/${route.params.id}`);
         equipo.value = response.data.data;
       } catch (error) {
         console.error('Error al cargar el equipo', error);
@@ -135,7 +135,7 @@ export default defineComponent({
 
     const actualizarEquipo = async () => {
       try {
-        await axios.put(`http://localhost:5000/api/equipos/${route.params.id}`, equipo.value);
+        await axios.put(`https://isiback.drtchco.gob.pe/api/equipos/${route.params.id}`, equipo.value);
         alert('Equipo actualizado correctamente');
         router.push('/');
       } catch (error: any) {
@@ -153,7 +153,7 @@ export default defineComponent({
       if (!confirmacion) return;
 
       try {
-        await axios.delete(`http://localhost:5000/api/equipos/${route.params.id}`);
+        await axios.delete(`https://isiback.drtchco.gob.pe/api/equipos/${route.params.id}`);
         alert('Equipo eliminado correctamente');
         router.push('/equipos');
       } catch (error) {

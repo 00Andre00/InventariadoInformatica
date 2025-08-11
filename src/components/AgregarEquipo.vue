@@ -117,7 +117,7 @@ export default defineComponent({
 
     const agregarEquipo = async () => {
       try {
-        await axios.post('http://localhost:5000/api/equipos', nuevoEquipo.value);
+        await axios.post('https://isiback.drtchco.gob.pe/api/equipos', nuevoEquipo.value);
         alert('Equipo agregado correctamente');
         // Resetear formulario
         nuevoEquipo.value = {

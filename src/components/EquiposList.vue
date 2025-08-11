@@ -347,7 +347,7 @@ export default defineComponent({
       error.value = '';
       
       try {
-        const response = await axios.get('http://localhost:5000/api/equipos');
+        const response = await axios.get('https://isiback.drtchco.gob.pe/api/equipos');
         equipos.value = response.data.data;
       } catch (err: any) {
         console.error('Error al cargar equipos:', err);
@@ -362,7 +362,7 @@ export default defineComponent({
     const cargarMantenimientos = async (equipoId: number) => {
       cargandoMantenimientos.value = true;
       try {
-        const response = await axios.get(`http://localhost:5000/api/equipos/${equipoId}/mantenimientos`);
+        const response = await axios.get(`https://isiback.drtchco.gob.pe/api/equipos/${equipoId}/mantenimientos`);
         return response.data.data;
       } catch (err) {
         console.error('Error al cargar mantenimientos:', err);
@@ -451,7 +451,7 @@ export default defineComponent({
       eliminando.value = true;
 
       try {
-        await axios.delete(`http://localhost:5000/api/equipos/${equipoAEliminar.value.id}`);
+        await axios.delete(`https://isiback.drtchco.gob.pe/api/equipos/${equipoAEliminar.value.id}`);
         equipos.value = equipos.value.filter(e => e.id !== equipoAEliminar.value!.id);
         equipoAEliminar.value = null;
       } catch (err: any) {
