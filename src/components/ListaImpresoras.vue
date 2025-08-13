@@ -1,8 +1,8 @@
 <template>
   <div class="container mx-auto p-4">
-    <!-- Encabezado mejorado responsive -->
+    <!-- Encabezado mejorado -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-      <h1 class="text-2xl font-bold text-gray-800">Lista de Impresoras</h1>
+      <h1 class="text-2xl font-bold text-gray-800">Inventario de Impresoras</h1>
       <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
         <router-link 
           to="/impresoras/agregar" 
@@ -20,7 +20,7 @@
       </div>
     </div>
 
-    <!-- Mensajes de estado mejorados -->
+    <!-- Mensajes de estado -->
     <div v-if="loading" class="text-center py-8 bg-gray-50 rounded-lg">
       <i class="fas fa-circle-notch fa-spin text-blue-500 text-2xl mb-2"></i>
       <p class="text-gray-600">Cargando impresoras...</p>
@@ -52,95 +52,93 @@
 
     <!-- Tabla de impresoras -->
     <div v-else class="bg-white rounded-lg shadow overflow-hidden">
-      <!-- Barra de búsqueda mejorada -->
+      <!-- Barra de búsqueda -->
       <div class="p-4 border-b bg-gray-50">
         <div class="relative max-w-md">
           <input 
             type="text" 
             v-model="busqueda" 
-            placeholder="Buscar por nombre, tipo, ubicación o serie..." 
+            placeholder="Buscar impresoras..." 
             class="input-search"
           />
           <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
         </div>
       </div>
 
-      <!-- Tabla responsive mejorada -->
+      <!-- Tabla responsive -->
       <div class="overflow-x-auto">
-        <div class="min-w-[900px] md:min-w-0">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-              <tr>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ubicación</th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Recurso</th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Modelo</th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">N° Serie</th>
-                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-if="impresorasPaginadas.length === 0">
-                <td colspan="8" class="px-4 py-6 text-center text-gray-500">
-                  <i class="fas fa-search-minus text-gray-300 text-xl mb-2"></i>
-                  <p>No se encontraron impresoras con los filtros actuales</p>
-                </td>
-              </tr>
-              <tr 
-                v-for="impresora in impresorasPaginadas" 
-                :key="impresora.id"
-                class="hover:bg-gray-50 transition-colors"
-              >
-                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">#{{ impresora.id }}</td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{{ impresora.nombre }}</td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm">
-                  <span class="px-2 py-1 rounded-full text-xs font-medium" 
-                        :class="getBadgeClass(impresora.tipo)">
-                    {{ impresora.tipo }}
-                  </span>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm">
-                  <div class="flex flex-col">
-                    <span>Piso {{ impresora.piso }}</span>
-                    <span class="text-xs text-gray-500">{{ impresora.oficina }}</span>
-                  </div>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                  {{ impresora.recurso || '-' }}
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                  {{ impresora.modeloRecurso || '-' }}
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500 font-mono">
-                  {{ impresora.numeroSerie || '-' }}
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap text-sm text-center">
-                  <div class="flex justify-center space-x-1">
-                    <button 
-                      @click="editarImpresora(impresora.id)"
-                      class="btn-action bg-gray-800 text-white hover:bg-gray-700"
-                      title="Editar"
-                    >
-                      <i class="fas fa-edit"></i>
-                    </button>
-                    <button 
-                      @click="confirmarEliminacion(impresora)"
-                      class="btn-action bg-gray-800 text-white hover:bg-gray-700"
-                      title="Eliminar"
-                    >
-                      <i class="fas fa-trash"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Modelo</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP/MAC</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Oficina</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código Patrimonial</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr v-if="impresorasPaginadas.length === 0">
+              <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                <i class="fas fa-search-minus text-gray-300 text-2xl mb-2"></i>
+                <p>No se encontraron impresoras con los filtros actuales</p>
+              </td>
+            </tr>
+            <tr 
+              v-for="impresora in impresorasPaginadas" 
+              :key="impresora.id"
+              class="hover:bg-gray-50 transition-colors"
+            >
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{{ impresora.id }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
+                <div class="font-medium">{{ impresora.modelo }}</div>
+                <div v-if="impresora.tipo" class="text-xs text-gray-500">
+                  {{ impresora.tipo }}
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
+                <div class="font-mono">{{ impresora.ip || '-' }}</div>
+                <div class="text-xs font-mono text-gray-500">{{ impresora.mac || '-' }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
+                {{ impresora.oficina }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
+                {{ impresora.codigoPatrimonial || '-' }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
+                <div v-if="impresora.usuario">
+                  {{ impresora.usuario.nombres }} {{ impresora.usuario.apellidos }}
+                  <div class="text-xs text-gray-500">{{ impresora.usuario.dni }}</div>
+                </div>
+                <div v-else class="text-gray-400">Sin asignar</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                <div class="flex justify-center space-x-2">
+                  <button 
+                    @click="editarImpresora(impresora.id)"
+                    class="btn-action bg-blue-600 text-white hover:bg-blue-700"
+                    title="Editar"
+                  >
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button 
+                    @click="confirmarEliminacion(impresora)"
+                    class="btn-action bg-red-600 text-white hover:bg-red-700"
+                    title="Eliminar"
+                  >
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
-      <!-- Paginación mejorada -->
+      <!-- Paginación -->
       <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-3">
         <div class="text-sm text-gray-500">
           Mostrando {{ ((paginaActual - 1) * itemsPorPagina) + 1 }} - 
@@ -154,24 +152,21 @@
             :disabled="paginaActual === 1"
             class="pagination-button"
           >
-            <i class="fas fa-chevron-left text-xs"></i>
+            <i class="fas fa-chevron-left"></i>
           </button>
           
           <template v-for="page in totalPaginas" :key="page">
             <button 
               v-if="Math.abs(page - paginaActual) <= 2 || page === 1 || page === totalPaginas"
               @click="cambiarPagina(page)"
-              :class="{
-                'bg-blue-500 text-white hover:bg-blue-600': paginaActual === page, 
-                'bg-white text-gray-700 hover:bg-gray-100': paginaActual !== page
-              }"
+              :class="{'bg-blue-500 text-white': paginaActual === page, 'bg-white text-gray-700': paginaActual !== page}"
               class="pagination-button"
             >
               {{ page }}
             </button>
             <span 
               v-else-if="Math.abs(page - paginaActual) === 3" 
-              class="px-2 text-gray-500 text-sm"
+              class="px-2 text-gray-500"
             >
               ...
             </span>
@@ -182,22 +177,22 @@
             :disabled="paginaActual >= totalPaginas"
             class="pagination-button"
           >
-            <i class="fas fa-chevron-right text-xs"></i>
+            <i class="fas fa-chevron-right"></i>
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Modal de confirmación mejorado -->
+    <!-- Modal de confirmación de eliminación -->
     <div v-if="impresoraAEliminar" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+      <div class="bg-white rounded-lg p-6 max-w-md w-full">
         <div class="flex items-center mb-4">
           <i class="fas fa-exclamation-triangle text-yellow-500 mr-2"></i>
           <h3 class="text-lg font-semibold">Confirmar Eliminación</h3>
         </div>
         
         <p class="text-gray-600 mb-4">
-          ¿Estás seguro de eliminar la impresora <strong class="text-gray-800">{{ impresoraAEliminar.nombre }}</strong>?
+          ¿Estás seguro de eliminar la impresora <strong class="text-gray-800">{{ impresoraAEliminar.modelo }}</strong>?
         </p>
         <p class="text-sm text-gray-500 mb-6">
           <i class="fas fa-info-circle mr-1"></i> Esta acción no se puede deshacer.
@@ -232,15 +227,23 @@ import { useRouter } from 'vue-router';
 import axios from 'axios';
 import ExcelJS from 'exceljs';
 
+interface Usuario {
+  id: number;
+  dni: string;
+  nombres: string;
+  apellidos: string;
+}
+
 interface Impresora {
   id: number;
-  nombre: string;
-  tipo: string;
-  piso: string;
+  modelo: string;
+  ip: string;
+  mac: string;
   oficina: string;
-  recurso: string;
-  modeloRecurso: string;
-  numeroSerie: string;
+  codigoPatrimonial: string;
+  usuarioId?: number;
+  usuario?: Usuario;
+  tipo?: string;
 }
 
 export default defineComponent({
@@ -260,11 +263,10 @@ export default defineComponent({
     const cargarImpresoras = async () => {
       loading.value = true;
       error.value = '';
-
+      
       try {
         const response = await axios.get('https://isiback.drtchco.gob.pe/api/impresoras');
         impresoras.value = response.data.data;
-        impresoras.value.sort((a: Impresora, b: Impresora) => a.id - b.id);
       } catch (err: any) {
         console.error('Error al cargar impresoras:', err);
         error.value = 'No se pudieron cargar las impresoras. ' + 
@@ -278,18 +280,14 @@ export default defineComponent({
     const impresorasFiltradas = computed(() => {
       if (!busqueda.value.trim()) return impresoras.value;
       const termino = busqueda.value.toLowerCase().trim();
-      return impresoras.value.filter(impresora => {
-        const campos = [
-          impresora.nombre,
-          impresora.tipo,
-          impresora.oficina,
-          impresora.piso,
-          impresora.recurso,
-          impresora.modeloRecurso,
-          impresora.numeroSerie
-        ];
-        return campos.some(campo => campo?.toLowerCase().includes(termino));
-      });
+      return impresoras.value.filter(impresora => 
+        impresora.modelo?.toLowerCase().includes(termino) ||
+        impresora.ip?.toLowerCase().includes(termino) ||
+        impresora.mac?.toLowerCase().includes(termino) ||
+        impresora.oficina?.toLowerCase().includes(termino) ||
+        impresora.codigoPatrimonial?.toLowerCase().includes(termino) ||
+        (impresora.usuario?.nombres + ' ' + impresora.usuario?.apellidos)?.toLowerCase().includes(termino)
+      );
     });
 
     const impresorasPaginadas = computed(() => {
@@ -298,7 +296,7 @@ export default defineComponent({
       return impresorasFiltradas.value.slice(inicio, fin);
     });
 
-    const totalPaginas = computed(() =>
+    const totalPaginas = computed(() => 
       Math.ceil(impresorasFiltradas.value.length / itemsPorPagina)
     );
 
@@ -308,19 +306,6 @@ export default defineComponent({
         paginaActual.value = pagina;
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
-    };
-
-    const getBadgeClass = (tipo: string) => {
-      const tipos: Record<string, string> = {
-        'Láser': 'bg-blue-100 text-blue-800',
-        'Inyección de tinta': 'bg-purple-100 text-purple-800',
-        'Matricial': 'bg-red-100 text-red-800',
-        'Multifunción': 'bg-green-100 text-green-800',
-        'Térmica': 'bg-yellow-100 text-yellow-800',
-        'Plotter': 'bg-indigo-100 text-indigo-800',
-        '3D': 'bg-pink-100 text-pink-800'
-      };
-      return tipos[tipo] || 'bg-gray-100 text-gray-800';
     };
 
     const editarImpresora = (id: number) => {
@@ -362,69 +347,51 @@ export default defineComponent({
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Impresoras');
 
-        // Definir columnas
+        // Columnas actualizadas
         worksheet.columns = [
-          { header: 'ID', key: 'id', width: 8 },
-          { header: 'Nombre', key: 'nombre', width: 25 },
-          { header: 'Tipo', key: 'tipo', width: 15 },
-          { header: 'Piso', key: 'piso', width: 8 },
+          { header: 'ID', key: 'id', width: 10 },
+          { header: 'Modelo', key: 'modelo', width: 25 },
+          { header: 'IP', key: 'ip', width: 15 },
+          { header: 'MAC', key: 'mac', width: 20 },
           { header: 'Oficina', key: 'oficina', width: 20 },
-          { header: 'Recurso', key: 'recurso', width: 20 },
-          { header: 'Modelo', key: 'modeloRecurso', width: 20 },
-          { header: 'N° Serie', key: 'numeroSerie', width: 20 }
+          { header: 'Código Patrimonial', key: 'codigoPatrimonial', width: 20 },
+          { header: 'Usuario', key: 'usuario', width: 30 }
         ];
 
-        // Estilo para las cabeceras
-        worksheet.getRow(1).eachCell((cell) => {
+        // Estilo cabeceras
+        worksheet.getRow(1).eachCell(cell => {
           cell.fill = {
             type: 'pattern',
             pattern: 'solid',
-            fgColor: { argb: 'FF3B82F6' } // azul-600
+            fgColor: { argb: 'FF3B82F6' }
           };
-          cell.font = { 
-            bold: true, 
-            color: { argb: 'FFFFFFFF' }, // blanco
-            size: 12
-          };
-          cell.alignment = { vertical: 'middle', horizontal: 'center' };
+          cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
           cell.border = {
-            top: { style: 'thin', color: { argb: 'FF1E40AF' } }, // azul-800
+            top: { style: 'thin', color: { argb: 'FF1E40AF' } },
             bottom: { style: 'thin', color: { argb: 'FF1E40AF' } },
             left: { style: 'thin', color: { argb: 'FF1E40AF' } },
             right: { style: 'thin', color: { argb: 'FF1E40AF' } }
           };
         });
 
-        // Añadir datos
+        // Datos actualizados
         impresoras.value.forEach((impresora, index) => {
           const row = worksheet.addRow({
             id: impresora.id,
-            nombre: impresora.nombre || 'N/A',
-            tipo: impresora.tipo || 'N/A',
-            piso: impresora.piso || 'N/A',
-            oficina: impresora.oficina || 'N/A',
-            recurso: impresora.recurso || 'N/A',
-            modeloRecurso: impresora.modeloRecurso || 'N/A',
-            numeroSerie: impresora.numeroSerie || 'N/A'
+            modelo: impresora.modelo,
+            ip: impresora.ip,
+            mac: impresora.mac,
+            oficina: impresora.oficina,
+            codigoPatrimonial: impresora.codigoPatrimonial || '-',
+            usuario: impresora.usuario ? `${impresora.usuario.nombres} ${impresora.usuario.apellidos}` : 'Sin asignar'
           });
 
           // Alternar colores de fila
           row.fill = {
             type: 'pattern',
             pattern: 'solid',
-            fgColor: { argb: index % 2 === 0 ? 'FFF3F4F6' : 'FFFFFFFF' } // gris-50 / blanco
+            fgColor: { argb: index % 2 === 0 ? 'FFF3F4F6' : 'FFFFFFFF' }
           };
-
-          // Alinear celdas
-          row.eachCell({ includeEmpty: true }, (cell) => {
-            cell.border = {
-              top: { style: 'thin', color: { argb: 'FFE5E7EB' } }, // gris-200
-              bottom: { style: 'thin', color: { argb: 'FFE5E7EB' } },
-              left: { style: 'thin', color: { argb: 'FFE5E7EB' } },
-              right: { style: 'thin', color: { argb: 'FFE5E7EB' } }
-            };
-            cell.alignment = { vertical: 'middle', horizontal: 'left' };
-          });
         });
 
         // Autoajustar columnas
@@ -439,7 +406,7 @@ export default defineComponent({
                 }
               }
             });
-            column.width = Math.min(Math.max(maxLength + 2, column.header?.length || 0), 30);
+            column.width = Math.min(Math.max(maxLength + 2, 10), 30);
           }
         });
 
@@ -449,7 +416,7 @@ export default defineComponent({
           type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         });
 
-        // Descargar archivo
+        // Descargar
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
         link.download = `impresoras_${new Date().toISOString().split('T')[0]}.xlsx`;
@@ -483,7 +450,6 @@ export default defineComponent({
       totalPaginas,
       cargarImpresoras,
       cambiarPagina,
-      getBadgeClass,
       editarImpresora,
       confirmarEliminacion,
       cancelarEliminacion,
@@ -504,7 +470,7 @@ export default defineComponent({
 }
 
 .btn-action {
-  @apply inline-flex items-center justify-center p-2 rounded-full bg-gray-800 text-white hover:bg-gray-700 transition-colors focus:outline-none;
+  @apply inline-flex items-center justify-center p-2 rounded-full transition-colors focus:outline-none;
 }
 
 .btn-cancel {
