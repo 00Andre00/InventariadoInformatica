@@ -73,16 +73,17 @@
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Marca/Modelo</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Procesador/Grafica</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Procesador</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">RAM/Almacenamiento</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP/MAC/Serie</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ubicación/Usuario</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP/MAC</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Oficina/Usuario</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monitor</th>
               <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-if="equiposPaginados.length === 0">
-              <td colspan="8" class="px-6 py-8 text-center text-gray-500">
+              <td colspan="9" class="px-6 py-8 text-center text-gray-500">
                 <i class="fas fa-search-minus text-gray-300 text-2xl mb-2"></i>
                 <p>No se encontraron equipos con los filtros actuales</p>
               </td>
@@ -98,15 +99,21 @@
                       :class="getBadgeClass(equipo.tipo)">
                   {{ equipo.tipo }}
                 </span>
+                <div class="text-xs mt-1" :class="getEstadoClass(equipo.estado)">
+                  {{ equipo.estado }}
+                </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm">
                 <div class="font-medium">{{ equipo.marca }}</div>
                 <div class="text-gray-500">{{ equipo.modelo }}</div>
+                <div v-if="equipo.codigoPatrimonial" class="text-xs text-gray-400">
+                  Pat: {{ equipo.codigoPatrimonial }}
+                </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {{ equipo.procesador || '-' }}
-                <div v-if="equipo.grafica" class="text-xs text-gray-400">
-                  GPU: {{ equipo.grafica }}
+                <div v-if="equipo.so" class="text-xs text-gray-400">
+                  SO: {{ equipo.so }}
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm">
@@ -116,37 +123,48 @@
               <td class="px-6 py-4 whitespace-nowrap text-sm">
                 <div class="font-mono">{{ equipo.ip || '-' }}</div>
                 <div class="text-xs font-mono text-gray-500">{{ equipo.mac || '-' }}</div>
-                <div class="text-xs text-gray-500">{{ equipo.numeroSerie || '-' }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm">
                 <div class="flex flex-col">
                   <span>{{ equipo.oficina }}</span>
-                  <span class="text-xs text-gray-500">{{ equipo.usuario || 'Sin usuario' }}</span>
-                  <button 
-                    v-if="equipo.mantenimientos && equipo.mantenimientos.length > 0"
-                    @click="verMantenimientos(equipo)"
-                    class="text-xs text-blue-500 hover:text-blue-700 mt-1 text-left"
-                  >
-                    <i class="fas fa-tools mr-1"></i>
-                    {{ equipo.mantenimientos.length }} mantenimiento(s)
-                  </button>
+                  <span v-if="equipo.usuario" class="text-xs text-gray-500">
+                    {{ equipo.usuario.nombres }} {{ equipo.usuario.apellidos }}
+                  </span>
+                  <span v-else class="text-xs text-gray-500">Sin usuario</span>
                 </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
+                <div v-if="equipo.marcaMonitor">
+                  {{ equipo.marcaMonitor }} ({{ equipo.pulgadasMonitor }}")
+                  <div v-if="equipo.codigoPatrimonialMonitor" class="text-xs text-gray-400">
+                    Pat: {{ equipo.codigoPatrimonialMonitor }}
+                  </div>
+                </div>
+                <div v-else class="text-gray-400">-</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
                 <div class="flex justify-center space-x-2">
                   <button 
                     @click="editarEquipo(equipo)"
-                    class="btn-action bg-gray-800 text-white hover:bg-gray-700"
+                    class="btn-action bg-blue-600 text-white hover:bg-blue-700"
                     title="Editar"
                   >
                     <i class="fas fa-edit"></i>
                   </button>
                   <button 
                     @click="confirmarEliminacion(equipo)"
-                    class="btn-action bg-gray-800 text-white hover:bg-gray-700"
+                    class="btn-action bg-red-600 text-white hover:bg-red-700"
                     title="Eliminar"
                   >
                     <i class="fas fa-trash"></i>
+                  </button>
+                  <button 
+                    v-if="equipo.mantenimientos && equipo.mantenimientos.length > 0"
+                    @click="verMantenimientos(equipo)"
+                    class="btn-action bg-gray-600 text-white hover:bg-gray-700"
+                    title="Ver mantenimientos"
+                  >
+                    <i class="fas fa-tools"></i>
                   </button>
                 </div>
               </td>
@@ -301,22 +319,36 @@ import { useRouter } from 'vue-router';
 import axios from 'axios';
 import ExcelJS from 'exceljs';
 
+interface Usuario {
+  id: number;
+  dni: string;
+  nombres: string;
+  apellidos: string;
+}
+
 interface Equipo {
   id: number;
   tipo: string;
   marca: string;
   modelo: string;
   procesador: string;
-  grafica: string;
   ram: string;
   almacenamiento: string;
-  placaMadre: string;
   oficina: string;
-  vlan: string;
   ip: string;
   mac: string;
-  numeroSerie: string;
-  usuario: string;
+  codigoPatrimonial: string;
+  so: string;
+  officeVersion: string;
+  antivirus: string;
+  estado: string;
+  marcaMonitor: string;
+  pulgadasMonitor: string;
+  codigoPatrimonialMonitor: string;
+  tieneTeclado: boolean;
+  tieneMouse: boolean;
+  usuarioId: number | null;
+  usuario?: Usuario;
   mantenimientos?: Mantenimiento[];
 }
 
@@ -348,7 +380,11 @@ export default defineComponent({
       
       try {
         const response = await axios.get('https://isiback.drtchco.gob.pe/api/equipos');
-        equipos.value = response.data.data;
+        equipos.value = response.data.data.map((equipo: any) => ({
+          ...equipo,
+        tieneTeclado: Boolean(equipo.tieneTeclado),
+        tieneMouse: Boolean(equipo.tieneMouse)
+        }));
       } catch (err: any) {
         console.error('Error al cargar equipos:', err);
         error.value = 'No se pudieron cargar los equipos. ' + 
@@ -383,8 +419,8 @@ export default defineComponent({
         equipo.ip?.toLowerCase().includes(termino) ||
         equipo.mac?.toLowerCase().includes(termino) ||
         equipo.oficina?.toLowerCase().includes(termino) ||
-        equipo.numeroSerie?.toLowerCase().includes(termino) ||
-        equipo.usuario?.toLowerCase().includes(termino)
+        equipo.codigoPatrimonial?.toLowerCase().includes(termino) ||
+        (equipo.usuario?.nombres + ' ' + equipo.usuario?.apellidos)?.toLowerCase().includes(termino)
       );
     });
 
@@ -411,11 +447,19 @@ export default defineComponent({
         'Computadora': 'bg-blue-100 text-blue-800',
         'Laptop': 'bg-purple-100 text-purple-800',
         'Servidor': 'bg-red-100 text-red-800',
-        'Impresora': 'bg-green-100 text-green-800',
-        'Switch': 'bg-yellow-100 text-yellow-800',
-        'Router': 'bg-indigo-100 text-indigo-800'
+        'Otro': 'bg-gray-100 text-gray-800'
       };
       return tipos[tipo] || 'bg-gray-100 text-gray-800';
+    };
+
+    const getEstadoClass = (estado: string) => {
+      const estados: Record<string, string> = {
+        'activo': 'text-green-600',
+        'inactivo': 'text-gray-600',
+        'mantenimiento': 'text-yellow-600',
+        'baja': 'text-red-600'
+      };
+      return estados[estado] || 'text-gray-600';
     };
 
     const formatFecha = (fecha: string) => {
@@ -426,9 +470,9 @@ export default defineComponent({
       });
     };
 
-   const editarEquipo = (equipo: Equipo) => {
-  router.push(`/editar/${equipo.id}`);
-};
+    const editarEquipo = (equipo: Equipo) => {
+      router.push(`/editar/${equipo.id}`);
+    };
 
     const verMantenimientos = async (equipo: Equipo) => {
       equipoSeleccionado.value = { ...equipo };
@@ -462,7 +506,7 @@ export default defineComponent({
       }
     };
 
-   const exportarEquipos = async () => {
+const exportarEquipos = async () => {
   if (equipos.value.length === 0) {
     alert('No hay equipos para exportar');
     return;
@@ -472,24 +516,32 @@ export default defineComponent({
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Equipos');
 
-    // Columnas actualizadas para incluir gráfica
+    // Columnas
     worksheet.columns = [
       { header: 'ID', key: 'id', width: 10 },
       { header: 'Tipo', key: 'tipo', width: 15 },
       { header: 'Marca', key: 'marca', width: 20 },
       { header: 'Modelo', key: 'modelo', width: 20 },
       { header: 'Procesador', key: 'procesador', width: 25 },
-      { header: 'Tarjeta Gráfica', key: 'grafica', width: 25 }, // Nueva columna
       { header: 'RAM', key: 'ram', width: 15 },
       { header: 'Almacenamiento', key: 'almacenamiento', width: 20 },
+      { header: 'Oficina', key: 'oficina', width: 20 },
       { header: 'IP', key: 'ip', width: 15 },
       { header: 'MAC', key: 'mac', width: 20 },
-      { header: 'N° Serie', key: 'numeroSerie', width: 20 },
-      { header: 'Oficina', key: 'oficina', width: 15 },
-      { header: 'Usuario', key: 'usuario', width: 20 }
+      { header: 'Código Patrimonial', key: 'codigoPatrimonial', width: 20 },
+      { header: 'Sistema Operativo', key: 'so', width: 20 },
+      { header: 'Versión Office', key: 'officeVersion', width: 20 },
+      { header: 'Antivirus', key: 'antivirus', width: 20 },
+      { header: 'Estado', key: 'estado', width: 15 },
+      { header: 'Marca Monitor', key: 'marcaMonitor', width: 20 },
+      { header: 'Pulgadas Monitor', key: 'pulgadasMonitor', width: 15 },
+      { header: 'Código Monitor', key: 'codigoPatrimonialMonitor', width: 20 },
+      { header: 'Tiene Teclado', key: 'tieneTeclado', width: 15 },
+      { header: 'Tiene Mouse', key: 'tieneMouse', width: 15 },
+      { header: 'Usuario', key: 'usuario', width: 30 }
     ];
 
-    // Estilo cabeceras (se mantiene igual)
+    // Estilo cabeceras
     worksheet.getRow(1).eachCell(cell => {
       cell.fill = {
         type: 'pattern',
@@ -505,7 +557,7 @@ export default defineComponent({
       };
     });
 
-    // Datos actualizados para incluir gráfica
+    // Datos - versión corregida
     equipos.value.forEach((equipo, index) => {
       const row = worksheet.addRow({
         id: equipo.id,
@@ -513,17 +565,25 @@ export default defineComponent({
         marca: equipo.marca,
         modelo: equipo.modelo,
         procesador: equipo.procesador,
-        grafica: equipo.grafica || '-', // Incluir el campo gráfica
         ram: equipo.ram,
         almacenamiento: equipo.almacenamiento,
+        oficina: equipo.oficina,
         ip: equipo.ip,
         mac: equipo.mac,
-        numeroSerie: equipo.numeroSerie,
-        oficina: equipo.oficina,
-        usuario: equipo.usuario || 'N/A'
+        codigoPatrimonial: equipo.codigoPatrimonial || '-',
+        so: equipo.so || '-',
+        officeVersion: equipo.officeVersion || '-',
+        antivirus: equipo.antivirus || '-',
+        estado: equipo.estado,
+        marcaMonitor: equipo.marcaMonitor || '-',
+        pulgadasMonitor: equipo.pulgadasMonitor || '-',
+        codigoPatrimonialMonitor: equipo.codigoPatrimonialMonitor || '-',
+        tieneTeclado: equipo.tieneTeclado ? 'Sí' : 'No', // Conversión directa
+        tieneMouse: equipo.tieneMouse ? 'Sí' : 'No',     // Conversión directa
+        usuario: equipo.usuario ? `${equipo.usuario.nombres} ${equipo.usuario.apellidos}` : 'Sin asignar'
       });
 
-      // Alternar colores de fila (se mantiene igual)
+      // Estilo filas alternadas
       row.fill = {
         type: 'pattern',
         pattern: 'solid',
@@ -531,7 +591,6 @@ export default defineComponent({
       };
     });
 
-    // Resto del código se mantiene igual...
     // Autoajustar columnas
     worksheet.columns.forEach(column => {
       if (column.values) {
@@ -548,13 +607,12 @@ export default defineComponent({
       }
     });
 
-    // Generar archivo
+    // Generar y descargar archivo
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     });
 
-    // Descargar
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = `equipos_${new Date().toISOString().split('T')[0]}.xlsx`;
@@ -589,6 +647,7 @@ export default defineComponent({
       cargarEquipos,
       cambiarPagina,
       getBadgeClass,
+      getEstadoClass,
       formatFecha,
       editarEquipo,
       verMantenimientos,
@@ -611,7 +670,7 @@ export default defineComponent({
 }
 
 .btn-action {
-  @apply inline-flex items-center justify-center p-2 rounded-full bg-gray-800 text-white hover:bg-gray-700 transition-colors focus:outline-none;
+  @apply inline-flex items-center justify-center p-2 rounded-full transition-colors focus:outline-none;
 }
 
 .btn-cancel {
