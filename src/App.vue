@@ -21,11 +21,11 @@
               <i class="fas fa-desktop mr-1"></i> Equipos
             </router-link>
             <router-link 
-              to="/dispositivos" 
+              to="/usuarios" 
               class="px-3 py-1 rounded-md hover:bg-gray-700 hover:text-green-400 transition-colors duration-200"
               active-class="bg-gray-700 text-green-400"
             >
-              <i class="fas fa-laptop mr-1"></i> Dispositivos
+              <i class="fas fa-users mr-1"></i> Usuarios
             </router-link>
             <router-link 
               to="/impresoras" 
@@ -59,12 +59,12 @@
             <i class="fas fa-desktop mr-2"></i> Equipos
           </router-link>
           <router-link 
-            to="/dispositivos" 
+            to="/usuarios" 
             class="block px-3 py-2 rounded-md hover:bg-gray-700 hover:text-green-400 transition-colors duration-200"
             active-class="bg-gray-700 text-green-400"
             @click="isMobileMenuOpen = false"
           >
-            <i class="fas fa-laptop mr-2"></i> Dispositivos
+            <i class="fas fa-users mr-2"></i> Usuarios
           </router-link>
           <router-link 
             to="/impresoras" 
