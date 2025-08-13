@@ -106,6 +106,13 @@
                     <i class="fas fa-laptop"></i>
                   </button>
                   <button 
+                    @click="verImpresoras(usuario)"
+                    class="btn-action bg-purple-600 text-white hover:bg-purple-700"
+                    title="Ver Impresoras"
+                  >
+                    <i class="fas fa-print"></i>
+                  </button>
+                  <button 
                     @click="confirmarEliminacion(usuario)"
                     class="btn-action bg-red-600 text-white hover:bg-red-700"
                     title="Eliminar"
@@ -198,14 +205,14 @@
     </div>
 
     <!-- Modal de equipos del usuario -->
-    <div v-if="usuarioSeleccionado" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div v-if="mostrarModalEquipos" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-lg font-semibold">
             <i class="fas fa-laptop mr-2 text-blue-500"></i>
-            Equipos asignados a {{ usuarioSeleccionado.nombres }} {{ usuarioSeleccionado.apellidos }}
+            Equipos asignados a {{ usuarioSeleccionado?.nombres }} {{ usuarioSeleccionado?.apellidos }}
           </h3>
-          <button @click="usuarioSeleccionado = null" class="text-gray-500 hover:text-gray-700">
+          <button @click="cerrarModalEquipos" class="text-gray-500 hover:text-gray-700">
             <i class="fas fa-times"></i>
           </button>
         </div>
@@ -244,6 +251,54 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal de impresoras del usuario -->
+    <div v-if="mostrarModalImpresoras" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-semibold">
+            <i class="fas fa-print mr-2 text-purple-500"></i>
+            Impresoras asignadas a {{ usuarioSeleccionado?.nombres }} {{ usuarioSeleccionado?.apellidos }}
+          </h3>
+          <button @click="cerrarModalImpresoras" class="text-gray-500 hover:text-gray-700">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        
+        <div v-if="cargandoImpresoras" class="text-center py-4">
+          <i class="fas fa-circle-notch fa-spin text-purple-500 text-xl"></i>
+          <p class="text-gray-600 mt-2">Cargando impresoras...</p>
+        </div>
+        
+        <div v-else>
+          <div v-if="impresorasUsuario.length === 0" class="text-center py-4 text-gray-500">
+            <i class="fas fa-print text-2xl mb-2"></i>
+            <p>No hay impresoras asignadas a este usuario</p>
+          </div>
+
+          <div v-else class="space-y-4">
+            <div 
+              v-for="impresora in impresorasUsuario" 
+              :key="impresora.id"
+              class="border rounded-lg p-4 hover:shadow-md transition-shadow"
+            >
+              <div class="flex justify-between items-start">
+                <div>
+                  <h4 class="font-medium">{{ impresora.modelo }}</h4>
+                  <p class="text-sm text-gray-500 mt-1">
+                    <span class="font-mono">{{ impresora.ip }}</span> • 
+                    <span class="font-medium">{{ impresora.codigoPatrimonial }}</span>
+                  </p>
+                </div>
+                <!-- <span class="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-800">
+                  {{ impresora.estado || 'Activa' }}
+                </span> -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -273,6 +328,14 @@ interface Equipo {
   estado: string;
 }
 
+interface Impresora {
+  id: number;
+  modelo: string;
+  ip: string;
+  codigoPatrimonial: string;
+  estado?: string;
+}
+
 export default defineComponent({
   name: 'ListaUsuarios',
   setup() {
@@ -287,7 +350,11 @@ export default defineComponent({
     const eliminando = ref(false);
     const usuarioSeleccionado = ref<Usuario | null>(null);
     const equiposUsuario = ref<Equipo[]>([]);
+    const impresorasUsuario = ref<Impresora[]>([]);
     const cargandoEquipos = ref(false);
+    const cargandoImpresoras = ref(false);
+    const mostrarModalEquipos = ref(false);
+    const mostrarModalImpresoras = ref(false);
 
     // Cargar usuarios desde la API
     const cargarUsuarios = async () => {
@@ -352,6 +419,7 @@ export default defineComponent({
 
     const verEquipos = async (usuario: Usuario) => {
       usuarioSeleccionado.value = usuario;
+      mostrarModalEquipos.value = true;
       cargandoEquipos.value = true;
       
       try {
@@ -363,6 +431,32 @@ export default defineComponent({
       } finally {
         cargandoEquipos.value = false;
       }
+    };
+
+    const verImpresoras = async (usuario: Usuario) => {
+      usuarioSeleccionado.value = usuario;
+      mostrarModalImpresoras.value = true;
+      cargandoImpresoras.value = true;
+      
+      try {
+        const response = await axios.get(`https://isiback.drtchco.gob.pe/api/usuarios/${usuario.id}/impresoras`);
+        impresorasUsuario.value = response.data.data;
+      } catch (err) {
+        console.error('Error al cargar impresoras:', err);
+        impresorasUsuario.value = [];
+      } finally {
+        cargandoImpresoras.value = false;
+      }
+    };
+
+    const cerrarModalEquipos = () => {
+      mostrarModalEquipos.value = false;
+      usuarioSeleccionado.value = null;
+    };
+
+    const cerrarModalImpresoras = () => {
+      mostrarModalImpresoras.value = false;
+      usuarioSeleccionado.value = null;
     };
 
     const confirmarEliminacion = (usuario: Usuario) => {
@@ -520,7 +614,11 @@ export default defineComponent({
       eliminando,
       usuarioSeleccionado,
       equiposUsuario,
+      impresorasUsuario,
       cargandoEquipos,
+      cargandoImpresoras,
+      mostrarModalEquipos,
+      mostrarModalImpresoras,
       usuariosFiltrados,
       usuariosPaginados,
       totalPaginas,
@@ -529,6 +627,9 @@ export default defineComponent({
       getBadgeContrato,
       editarUsuario,
       verEquipos,
+      verImpresoras,
+      cerrarModalEquipos,
+      cerrarModalImpresoras,
       confirmarEliminacion,
       cancelarEliminacion,
       eliminarUsuario,
