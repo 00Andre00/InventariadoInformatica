@@ -1,160 +1,193 @@
 <template>
-  <div class="container mx-auto p-4">
-    <h2 class="text-2xl font-semibold mb-4">Editar Equipo</h2>
+  <div class="p-4 border rounded-lg shadow-sm bg-white">
+    <h2 class="text-xl font-bold mb-4">Editar Equipo</h2>
+    <form @submit.prevent="actualizarEquipo" class="space-y-6">
+      <!-- Sección de Usuario -->
+      <div class="border-b pb-4">
+        <h3 class="text-lg font-semibold mb-3">Información del Usuario</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label for="usuarioId" class="block text-sm font-medium">Usuario Asignado</label>
+            <div class="relative">
+              <input 
+                v-model="usuarioBusqueda" 
+                @input="buscarUsuarios" 
+                @focus="mostrarListaUsuarios = true"
+                type="text" 
+                id="usuarioId" 
+                class="input" 
+                placeholder="Buscar usuario..."
+              />
+              <ul v-if="mostrarListaUsuarios && usuariosEncontrados.length" class="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                <li 
+                  v-for="usuario in usuariosEncontrados" 
+                  :key="usuario.id"
+                  @click="seleccionarUsuario(usuario)"
+                  class="px-4 py-2 hover:bg-blue-50 cursor-pointer"
+                >
+                  {{ usuario.nombres }} {{ usuario.apellidos }} ({{ usuario.dni }})
+                </li>
+              </ul>
+            </div>
+          </div>
 
-    <form @submit.prevent="actualizarEquipo" class="space-y-4">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Moví el campo de usuario al principio -->
-        <div>
-          <label for="usuarioId" class="block text-sm font-medium">Usuario Asignado</label>
-          <div class="relative">
+          <div>
+            <label for="oficina" class="block text-sm font-medium">Oficina</label>
             <input 
-              v-model="usuarioBusqueda" 
-              @input="buscarUsuarios" 
-              @focus="mostrarListaUsuarios = true"
+              v-model="equipo.oficina" 
+              id="oficina" 
               type="text" 
-              id="usuarioId" 
-              class="input" 
-              placeholder="Buscar usuario..."
+              class="input bg-gray-100" 
+              readonly 
             />
-            <ul v-if="mostrarListaUsuarios && usuariosEncontrados.length" class="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
-              <li 
-                v-for="usuario in usuariosEncontrados" 
-                :key="usuario.id"
-                @click="seleccionarUsuario(usuario)"
-                class="px-4 py-2 hover:bg-blue-50 cursor-pointer"
-              >
-                {{ usuario.nombres }} {{ usuario.apellidos }} ({{ usuario.dni }})
-              </li>
-            </ul>
           </div>
         </div>
+      </div>
 
-        <div>
-          <label for="tipo" class="block text-sm font-medium">Tipo*</label>
-          <select v-model="equipo.tipo" id="tipo" class="input" required>
-            <option value="">Seleccione un tipo</option>
-            <option value="Computadora">Computadora</option>
-            <option value="Laptop">Laptop</option>
-            <option value="Servidor">Servidor</option>
-            <option value="Otro">Otro</option>
-          </select>
+      <!-- Sección del Equipo -->
+      <div class="border-b pb-4">
+        <h3 class="text-lg font-semibold mb-3">Información del Equipo</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label for="tipo" class="block text-sm font-medium">Tipo*</label>
+            <select v-model="equipo.tipo" id="tipo" class="input" required>
+              <option value="">Seleccione un tipo</option>
+              <option value="Computadora">Computadora</option>
+              <option value="Laptop">Laptop</option>
+              <option value="Servidor">Servidor</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="marca" class="block text-sm font-medium">Marca*</label>
+            <input v-model="equipo.marca" id="marca" type="text" class="input" required />
+          </div>
+
+          <div>
+            <label for="modelo" class="block text-sm font-medium">Modelo*</label>
+            <input v-model="equipo.modelo" id="modelo" type="text" class="input" required />
+          </div>
+
+          <div>
+            <label for="procesador" class="block text-sm font-medium">Procesador*</label>
+            <input v-model="equipo.procesador" id="procesador" type="text" class="input" required />
+          </div>
+
+          <div>
+            <label for="ram" class="block text-sm font-medium">RAM*</label>
+            <select v-model="equipo.ram" id="ram" class="input" required>
+              <option value="">Seleccione RAM</option>
+              <option value="1GB">1GB</option>
+              <option value="2GB">2GB</option>
+              <option value="4GB">4GB</option>
+              <option value="6GB">6GB</option>
+              <option value="8GB">8GB</option>
+              <option value="16GB">16GB</option>
+              <option value="32GB">32GB</option>
+              <option value="64GB">64GB</option>
+              <option value="128GB">128GB</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="almacenamiento" class="block text-sm font-medium">Almacenamiento*</label>
+            <select v-model="equipo.almacenamiento" id="almacenamiento" class="input" required>
+              <option value="">Seleccione almacenamiento</option>
+              <option value="125GB">125GB</option>
+              <option value="250GB">250GB</option>
+              <option value="500GB">500GB</option>
+              <option value="1TB">1TB</option>
+              <option value="2TB">2TB</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="ip" class="block text-sm font-medium">IP*</label>
+            <input v-model="equipo.ip" id="ip" type="text" class="input" required />
+            <p class="text-xs text-gray-500 mt-1">Formato: 192.168.1.1</p>
+          </div>
+
+          <div>
+            <label for="mac" class="block text-sm font-medium">MAC Address*</label>
+            <input v-model="equipo.mac" id="mac" type="text" class="input" required />
+            <p class="text-xs text-gray-500 mt-1">Formato: 00:1A:2B:3C:4D:5E o 00-1A-2B-3C-4D-5E</p>
+          </div>
+
+          <div>
+            <label for="codigoPatrimonial" class="block text-sm font-medium">Código Patrimonial</label>
+            <input v-model="equipo.codigoPatrimonial" id="codigoPatrimonial" type="text" class="input" />
+          </div>
+
+          <div>
+            <label for="so" class="block text-sm font-medium">Sistema Operativo</label>
+            <select v-model="equipo.so" id="so" class="input">
+              <option value="">Seleccione SO</option>
+              <option value="Windows Server">Windows Server</option>
+              <option value="Windows 7">Windows 7</option>
+              <option value="Windows 8">Windows 8</option>
+              <option value="Windows 10">Windows 10</option>
+              <option value="Windows 11">Windows 11</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="officeVersion" class="block text-sm font-medium">Versión de Office</label>
+            <input v-model="equipo.officeVersion" id="officeVersion" type="text" class="input" />
+          </div>
+
+          <div>
+            <label for="antivirus" class="block text-sm font-medium">Antivirus</label>
+            <input v-model="equipo.antivirus" id="antivirus" type="text" class="input" />
+          </div>
+
+          <div>
+            <label for="estado" class="block text-sm font-medium">Estado del equipo*</label>
+            <select v-model="equipo.estado" id="estado" class="input" required>
+              <option value="">Seleccione estado</option>
+              <option value="Bueno">Bueno</option>
+              <option value="Regular">Regular</option>
+              <option value="Malo">Malo</option>
+            </select>
+          </div>
         </div>
+      </div>
 
-        <div>
-          <label for="marca" class="block text-sm font-medium">Marca*</label>
-          <input v-model="equipo.marca" id="marca" type="text" class="input" required />
+      <!-- Sección del Monitor -->
+      <div class="border-b pb-4">
+        <h3 class="text-lg font-semibold mb-3">Información del Monitor</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label for="marcaMonitor" class="block text-sm font-medium">Marca Monitor*</label>
+            <input v-model="equipo.marcaMonitor" id="marcaMonitor" type="text" class="input" required />
+          </div>
+
+          <div>
+            <label for="pulgadasMonitor" class="block text-sm font-medium">Pulgadas Monitor*</label>
+            <input v-model="equipo.pulgadasMonitor" id="pulgadasMonitor" type="text" class="input" required />
+          </div>
+
+          <div>
+            <label for="codigoPatrimonialMonitor" class="block text-sm font-medium">Código Patrimonial Monitor</label>
+            <input v-model="equipo.codigoPatrimonialMonitor" id="codigoPatrimonialMonitor" type="text" class="input" />
+          </div>
+
+          <div>
+            <label for="estadoMonitor" class="block text-sm font-medium">Estado del Monitor*</label>
+            <select v-model="equipo.estadoMonitor" id="estadoMonitor" class="input" required>
+              <option value="">Seleccione estado</option>
+              <option value="Bueno">Bueno</option>
+              <option value="Regular">Regular</option>
+              <option value="Malo">Malo</option>
+            </select>
+          </div>
         </div>
+      </div>
 
-        <div>
-          <label for="modelo" class="block text-sm font-medium">Modelo*</label>
-          <input v-model="equipo.modelo" id="modelo" type="text" class="input" required />
-        </div>
-
-        <div>
-          <label for="procesador" class="block text-sm font-medium">Procesador*</label>
-          <input v-model="equipo.procesador" id="procesador" type="text" class="input" required />
-        </div>
-
-        <div>
-          <label for="ram" class="block text-sm font-medium">RAM*</label>
-          <select v-model="equipo.ram" id="ram" class="input" required>
-            <option value="">Seleccione RAM</option>
-            <option value="1GB">1GB</option>
-            <option value="2GB">2GB</option>
-            <option value="4GB">4GB</option>
-            <option value="6GB">6GB</option>
-            <option value="8GB">8GB</option>
-            <option value="16GB">16GB</option>
-            <option value="32GB">32GB</option>
-            <option value="64GB">64GB</option>
-            <option value="128GB">128GB</option>
-          </select>
-        </div>
-
-        <div>
-          <label for="almacenamiento" class="block text-sm font-medium">Almacenamiento*</label>
-          <select v-model="equipo.almacenamiento" id="almacenamiento" class="input" required>
-            <option value="">Seleccione almacenamiento</option>
-            <option value="125GB">125GB</option>
-            <option value="250GB">250GB</option>
-            <option value="500GB">500GB</option>
-            <option value="1TB">1TB</option>
-            <option value="2TB">2TB</option>
-          </select>
-        </div>
-
-        <div>
-          <label for="oficina" class="block text-sm font-medium">Oficina*</label>
-          <input v-model="equipo.oficina" id="oficina" type="text" class="input" required />
-        </div>
-
-        <div>
-          <label for="ip" class="block text-sm font-medium">IP*</label>
-          <input v-model="equipo.ip" id="ip" type="text" class="input" required />
-          <p class="text-xs text-gray-500 mt-1">Formato: 192.168.1.1</p>
-        </div>
-
-        <div>
-          <label for="mac" class="block text-sm font-medium">MAC Address*</label>
-          <input v-model="equipo.mac" id="mac" type="text" class="input" required />
-          <p class="text-xs text-gray-500 mt-1">Formato: 00:1A:2B:3C:4D:5E o 00-1A-2B-3C-4D-5E</p>
-        </div>
-
-        <div>
-          <label for="codigoPatrimonial" class="block text-sm font-medium">Código Patrimonial</label>
-          <input v-model="equipo.codigoPatrimonial" id="codigoPatrimonial" type="text" class="input" />
-        </div>
-
-        <div>
-          <label for="so" class="block text-sm font-medium">Sistema Operativo</label>
-          <select v-model="equipo.so" id="so" class="input">
-            <option value="">Seleccione SO</option>
-            <option value="Windows Server">Windows Server</option>
-            <option value="Windows 7">Windows 7</option>
-            <option value="Windows 8">Windows 8</option>
-            <option value="Windows 10">Windows 10</option>
-            <option value="Windows 11">Windows 11</option>
-          </select>
-        </div>
-
-        <div>
-          <label for="officeVersion" class="block text-sm font-medium">Versión de Office</label>
-          <input v-model="equipo.officeVersion" id="officeVersion" type="text" class="input" />
-        </div>
-
-        <div>
-          <label for="antivirus" class="block text-sm font-medium">Antivirus</label>
-          <input v-model="equipo.antivirus" id="antivirus" type="text" class="input" />
-        </div>
-
-        <!-- Cambié el label de "Estado" a "Estado del equipo" -->
-        <div>
-          <label for="estado" class="block text-sm font-medium">Estado del equipo*</label>
-          <select v-model="equipo.estado" id="estado" class="input" required>
-            <option value="">Seleccione estado</option>
-            <option value="Bueno">Bueno</option>
-            <option value="Regular">Regular</option>
-            <option value="Malo">Malo</option>
-          </select>
-        </div>
-
-        <div>
-          <label for="marcaMonitor" class="block text-sm font-medium">Marca Monitor*</label>
-          <input v-model="equipo.marcaMonitor" id="marcaMonitor" type="text" class="input" required />
-        </div>
-
-        <div>
-          <label for="pulgadasMonitor" class="block text-sm font-medium">Pulgadas Monitor*</label>
-          <input v-model="equipo.pulgadasMonitor" id="pulgadasMonitor" type="text" class="input" required />
-        </div>
-
-        <div>
-          <label for="codigoPatrimonialMonitor" class="block text-sm font-medium">Código Patrimonial Monitor</label>
-          <input v-model="equipo.codigoPatrimonialMonitor" id="codigoPatrimonialMonitor" type="text" class="input" />
-        </div>
-
-        <div class="flex items-center space-x-4">
+      <!-- Sección de Periféricos -->
+      <div>
+        <h3 class="text-lg font-semibold mb-3">Periféricos</h3>
+        <div class="flex items-center space-x-6">
           <div class="flex items-center">
             <input v-model="equipo.tieneTeclado" id="tieneTeclado" type="checkbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
             <label for="tieneTeclado" class="ml-2 block text-sm font-medium">Tiene Teclado</label>
@@ -212,6 +245,7 @@ interface Equipo {
   marcaMonitor: string;
   pulgadasMonitor: string;
   codigoPatrimonialMonitor: string;
+  estadoMonitor: string;
   tieneTeclado: boolean;
   tieneMouse: boolean;
   usuarioId: number | null;
@@ -241,10 +275,11 @@ export default defineComponent({
       so: '',
       officeVersion: '',
       antivirus: '',
-      estado: 'activo',
+      estado: '',
       marcaMonitor: '',
       pulgadasMonitor: '',
       codigoPatrimonialMonitor: '',
+      estadoMonitor: '',
       tieneTeclado: false,
       tieneMouse: false,
       usuarioId: null
@@ -273,34 +308,40 @@ export default defineComponent({
 
     const seleccionarUsuario = (usuario: Usuario) => {
       equipo.value.usuarioId = usuario.id;
-      equipo.value.oficina = usuario.oficina; // Añadí esta línea para autocompletar la oficina
+      equipo.value.oficina = usuario.oficina;
       usuarioBusqueda.value = `${usuario.nombres} ${usuario.apellidos} (${usuario.dni})`;
       mostrarListaUsuarios.value = false;
     };
 
-const cargarEquipo = async () => {
-  try {
-    const response = await axios.get(`https://isiback.drtchco.gob.pe/api/equipos/${route.params.id}`);
-    const equipoData = response.data.data;
-    
-    // Convertir 1/0 o true/false de la BD a booleanos para los checkboxes
-    equipoData.tieneTeclado = Boolean(equipoData.tieneTeclado);
-    equipoData.tieneMouse = Boolean(equipoData.tieneMouse);
-    
-    // Cargar datos del usuario si existe
-    if (equipoData.usuario) {
-      usuarioBusqueda.value = `${equipoData.usuario.nombres} ${equipoData.usuario.apellidos} (${equipoData.usuario.dni})`;
-    }
-    
-    equipo.value = equipoData;
-  } catch (error) {
-    console.error('Error al cargar el equipo', error);
-    alert('Error al cargar los datos del equipo');
-  }
-};
+    const cargarEquipo = async () => {
+      try {
+        const response = await axios.get(`https://isiback.drtchco.gob.pe/api/equipos/${route.params.id}`);
+        const equipoData = response.data.data;
+        
+        // Convertir 1/0 o true/false de la BD a booleanos para los checkboxes
+        equipoData.tieneTeclado = Boolean(equipoData.tieneTeclado);
+        equipoData.tieneMouse = Boolean(equipoData.tieneMouse);
+        
+        // Cargar datos del usuario si existe
+        if (equipoData.usuario) {
+          usuarioBusqueda.value = `${equipoData.usuario.nombres} ${equipoData.usuario.apellidos} (${equipoData.usuario.dni})`;
+        }
+        
+        equipo.value = equipoData;
+      } catch (error) {
+        console.error('Error al cargar el equipo', error);
+        alert('Error al cargar los datos del equipo');
+      }
+    };
 
     const actualizarEquipo = async () => {
       try {
+        // Validar campos requeridos
+        if (!equipo.value.estado || !equipo.value.estadoMonitor) {
+          alert('Debe seleccionar el estado del equipo y del monitor');
+          return;
+        }
+
         // Preparar datos para enviar
         const datosEnvio = {
           ...equipo.value,

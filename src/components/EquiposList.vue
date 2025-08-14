@@ -345,6 +345,7 @@ interface Equipo {
   marcaMonitor: string;
   pulgadasMonitor: string;
   codigoPatrimonialMonitor: string;
+  estadoMonitor: string; // Nuevo campo añadido
   tieneTeclado: boolean;
   tieneMouse: boolean;
   usuarioId: number | null;
@@ -383,7 +384,9 @@ export default defineComponent({
         equipos.value = response.data.data.map((equipo: any) => ({
           ...equipo,
         tieneTeclado: Boolean(equipo.tieneTeclado),
-        tieneMouse: Boolean(equipo.tieneMouse)
+        tieneMouse: Boolean(equipo.tieneMouse),
+        estadoMonitor: equipo.estadoMonitor || '' // Asegurar que existe el campo
+
         }));
       } catch (err: any) {
         console.error('Error al cargar equipos:', err);
@@ -532,13 +535,15 @@ const exportarEquipos = async () => {
       { header: 'Sistema Operativo', key: 'so', width: 20 },
       { header: 'Versión Office', key: 'officeVersion', width: 20 },
       { header: 'Antivirus', key: 'antivirus', width: 20 },
-      { header: 'Estado', key: 'estado', width: 15 },
+      { header: 'Estado Equipo', key: 'estado', width: 15 },
       { header: 'Marca Monitor', key: 'marcaMonitor', width: 20 },
       { header: 'Pulgadas Monitor', key: 'pulgadasMonitor', width: 15 },
       { header: 'Código Monitor', key: 'codigoPatrimonialMonitor', width: 20 },
+      { header: 'Estado Monitor', key: 'estadoMonitor', width: 15 },
       { header: 'Tiene Teclado', key: 'tieneTeclado', width: 15 },
       { header: 'Tiene Mouse', key: 'tieneMouse', width: 15 },
-      { header: 'Usuario', key: 'usuario', width: 30 }
+      { header: 'Usuario', key: 'usuario', width: 30 },
+      { header: 'DNI Usuario', key: 'dniUsuario', width: 15 }
     ];
 
     // Estilo cabeceras
@@ -557,7 +562,7 @@ const exportarEquipos = async () => {
       };
     });
 
-    // Datos - versión corregida
+    // Datos
     equipos.value.forEach((equipo, index) => {
       const row = worksheet.addRow({
         id: equipo.id,
@@ -574,13 +579,15 @@ const exportarEquipos = async () => {
         so: equipo.so || '-',
         officeVersion: equipo.officeVersion || '-',
         antivirus: equipo.antivirus || '-',
-        estado: equipo.estado,
+        estado: equipo.estado || '-',
         marcaMonitor: equipo.marcaMonitor || '-',
         pulgadasMonitor: equipo.pulgadasMonitor || '-',
         codigoPatrimonialMonitor: equipo.codigoPatrimonialMonitor || '-',
-        tieneTeclado: equipo.tieneTeclado ? 'Sí' : 'No', // Conversión directa
-        tieneMouse: equipo.tieneMouse ? 'Sí' : 'No',     // Conversión directa
-        usuario: equipo.usuario ? `${equipo.usuario.nombres} ${equipo.usuario.apellidos}` : 'Sin asignar'
+        estadoMonitor: equipo.estadoMonitor || '-',
+        tieneTeclado: equipo.tieneTeclado ? 'Sí' : 'No',
+        tieneMouse: equipo.tieneMouse ? 'Sí' : 'No',
+        usuario: equipo.usuario ? `${equipo.usuario.nombres} ${equipo.usuario.apellidos}` : 'Sin asignar',
+        dniUsuario: equipo.usuario?.dni || '-'
       });
 
       // Estilo filas alternadas
