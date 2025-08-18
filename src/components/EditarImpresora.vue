@@ -1,18 +1,19 @@
 <template>
-  <div class="container mx-auto p-4">
+  <div class="p-4 border rounded-lg shadow-sm bg-white">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold text-gray-800">Editar Impresora</h1>
-      <router-link to="/impresoras" class="btn-secondary">
+      <h1 class="text-xl font-bold">Editar Impresora</h1>
+      <router-link to="/impresoras" class="text-blue-600 hover:text-blue-800 flex items-center">
         <i class="fas fa-arrow-left mr-2"></i> Volver a la Lista
       </router-link>
     </div>
 
-    <div class="bg-white shadow-md rounded-lg p-6">
-      <form @submit.prevent="actualizarImpresora" class="space-y-4">
+    <form @submit.prevent="actualizarImpresora" class="space-y-6">
+      <!-- Sección de Usuario -->
+      <div class="border-b pb-4">
+        <h2 class="text-lg font-semibold mb-3">Información del Usuario</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- Campo de usuario movido al principio -->
           <div>
-            <label for="usuario" class="block text-sm font-medium text-gray-700 mb-1">Usuario Asignado</label>
+            <label for="usuario" class="block text-sm font-medium mb-1">Usuario Asignado</label>
             <div class="relative">
               <input 
                 v-model="usuarioBusqueda" 
@@ -21,7 +22,7 @@
                 type="text" 
                 id="usuario" 
                 class="input" 
-                placeholder="Buscar usuario..."
+                placeholder="Buscar por DNI o nombre..."
               />
               <ul v-if="mostrarListaUsuarios && usuariosEncontrados.length" class="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
                 <li 
@@ -35,9 +36,26 @@
               </ul>
             </div>
           </div>
-
+          
           <div>
-            <label for="modelo" class="block text-sm font-medium text-gray-700 mb-1">Modelo*</label>
+            <label for="oficina" class="block text-sm font-medium mb-1">Oficina</label>
+            <input 
+              v-model="impresora.oficina" 
+              id="oficina" 
+              type="text" 
+              class="input bg-gray-100" 
+              readonly 
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Información de la Impresora -->
+      <div class="border-b pb-4">
+        <h2 class="text-lg font-semibold mb-3">Información de la Impresora</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label for="modelo" class="block text-sm font-medium mb-1">Modelo*</label>
             <input 
               v-model="impresora.modelo" 
               id="modelo" 
@@ -49,7 +67,22 @@
           </div>
           
           <div>
-            <label for="ip" class="block text-sm font-medium text-gray-700 mb-1">IP*</label>
+            <label for="estado" class="block text-sm font-medium mb-1">Estado*</label>
+            <select 
+              v-model="impresora.estado" 
+              id="estado" 
+              class="input" 
+              required
+            >
+              <option value="">Seleccione un estado</option>
+              <option value="Bueno">Bueno</option>
+              <option value="Regular">Regular</option>
+              <option value="Malo">Malo</option>
+            </select>
+          </div>
+          
+          <div>
+            <label for="ip" class="block text-sm font-medium mb-1">IP*</label>
             <input 
               v-model="impresora.ip" 
               id="ip" 
@@ -63,7 +96,7 @@
           </div>
           
           <div>
-            <label for="mac" class="block text-sm font-medium text-gray-700 mb-1">MAC Address*</label>
+            <label for="mac" class="block text-sm font-medium mb-1">MAC Address*</label>
             <input 
               v-model="impresora.mac" 
               id="mac" 
@@ -78,19 +111,7 @@
           </div>
           
           <div>
-            <label for="oficina" class="block text-sm font-medium text-gray-700 mb-1">Oficina*</label>
-            <input 
-              v-model="impresora.oficina" 
-              id="oficina" 
-              type="text" 
-              class="input" 
-              required 
-              placeholder="Ej: Gerencia de TI"
-            />
-          </div>
-          
-          <div>
-            <label for="codigoPatrimonial" class="block text-sm font-medium text-gray-700 mb-1">Código Patrimonial*</label>
+            <label for="codigoPatrimonial" class="block text-sm font-medium mb-1">Código Patrimonial*</label>
             <input 
               v-model="impresora.codigoPatrimonial" 
               id="codigoPatrimonial" 
@@ -101,30 +122,30 @@
             />
           </div>
         </div>
+      </div>
 
-        <div class="flex justify-between pt-4">
-          <button 
-            type="submit" 
-            class="btn-primary"
-            :disabled="loading || hayErrores"
-          >
-            <span v-if="loading">
-              <i class="fas fa-circle-notch fa-spin mr-2"></i> Actualizando...
-            </span>
-            <span v-else>Actualizar Impresora</span>
-          </button>
-          
-          <button 
-            @click="confirmarEliminacion" 
-            type="button"
-            class="btn-danger"
-            :disabled="loading"
-          >
-            <i class="fas fa-trash mr-2"></i> Eliminar Impresora
-          </button>
-        </div>
-      </form>
-    </div>
+      <div class="flex gap-4 pt-4">
+        <button 
+          type="submit" 
+          class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition disabled:opacity-50 disabled:cursor-not-allowed"
+          :disabled="loading || hayErrores"
+        >
+          <span v-if="loading">
+            <i class="fas fa-circle-notch fa-spin mr-2"></i> Actualizando...
+          </span>
+          <span v-else>Actualizar Impresora</span>
+        </button>
+        
+        <button 
+          @click="confirmarEliminacion" 
+          type="button"
+          class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition disabled:opacity-50 disabled:cursor-not-allowed"
+          :disabled="loading"
+        >
+          <i class="fas fa-trash mr-2"></i> Eliminar Impresora
+        </button>
+      </div>
+    </form>
 
     <!-- Modal de confirmación -->
     <div v-if="mostrarModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -144,13 +165,13 @@
         <div class="flex gap-3 justify-end">
           <button 
             @click="mostrarModal = false" 
-            class="btn-secondary"
+            class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded transition"
           >
             Cancelar
           </button>
           <button 
             @click="eliminarImpresora" 
-            class="btn-danger"
+            class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition disabled:opacity-50 disabled:cursor-not-allowed"
             :disabled="loading"
           >
             <span v-if="loading">
@@ -185,8 +206,14 @@ interface Impresora {
   mac: string;
   oficina: string;
   codigoPatrimonial: string;
+  estado: string;
   usuarioId?: number | null;
-  usuario?: Usuario;
+  usuario?: {
+    id: number;
+    dni: string;
+    nombres: string;
+    apellidos: string;
+  };
 }
 
 export default defineComponent({
@@ -198,6 +225,7 @@ export default defineComponent({
       mac: '',
       oficina: '',
       codigoPatrimonial: '',
+      estado: '',
       usuarioId: null
     });
     
@@ -220,7 +248,8 @@ export default defineComponent({
         !impresora.value.ip ||
         !impresora.value.mac ||
         !impresora.value.oficina ||
-        !impresora.value.codigoPatrimonial;
+        !impresora.value.codigoPatrimonial ||
+        !impresora.value.estado;
     });
 
     const validarIP = () => {
@@ -246,6 +275,7 @@ export default defineComponent({
         try {
           const response = await axios.get(`https://isiback.drtchco.gob.pe/api/buscar-usuarios?nombres=${usuarioBusqueda.value}`);
           usuariosEncontrados.value = response.data.data;
+          mostrarListaUsuarios.value = true;
         } catch (error) {
           console.error('Error al buscar usuarios:', error);
           usuariosEncontrados.value = [];
@@ -257,7 +287,7 @@ export default defineComponent({
 
     const seleccionarUsuario = (usuario: Usuario) => {
       impresora.value.usuarioId = usuario.id;
-      impresora.value.oficina = usuario.oficina; // Autocompletar oficina
+      impresora.value.oficina = usuario.oficina;
       usuarioBusqueda.value = `${usuario.nombres} ${usuario.apellidos} (${usuario.dni})`;
       mostrarListaUsuarios.value = false;
     };
@@ -266,22 +296,17 @@ export default defineComponent({
       try {
         loading.value = true;
         const response = await axios.get(`https://isiback.drtchco.gob.pe/api/impresoras/${route.params.id}`);
+        const impresoraData = response.data.data;
         
-        // Convertir datos para el formulario
-        const datos = response.data.data;
-        impresora.value = {
-          ...datos,
-          usuarioId: datos.usuarioId || null
-        };
-        
-        // Cargar nombre de usuario si existe
-        if (datos.usuario) {
-          usuarioBusqueda.value = `${datos.usuario.nombres} ${datos.usuario.apellidos} (${datos.usuario.dni})`;
+        // Cargar datos del usuario si existe
+        if (impresoraData.usuario) {
+          usuarioBusqueda.value = `${impresoraData.usuario.nombres} ${impresoraData.usuario.apellidos} (${impresoraData.usuario.dni})`;
         }
         
+        impresora.value = impresoraData;
       } catch (error) {
         console.error('Error al cargar la impresora', error);
-        alert('Error al cargar la impresora');
+        alert('Error al cargar los datos de la impresora');
         router.push('/impresoras');
       } finally {
         loading.value = false;
@@ -299,7 +324,7 @@ export default defineComponent({
         if (error.response?.data?.error) {
           alert(error.response.data.error);
         } else {
-          alert('Error al actualizar la impresora');
+          alert('Error al actualizar la impresora. Por favor, intente nuevamente.');
         }
       } finally {
         loading.value = false;
@@ -352,18 +377,10 @@ export default defineComponent({
 
 <style scoped>
 .input {
-  @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+  @apply p-2 border border-gray-300 rounded-md w-full focus:ring-blue-500 focus:border-blue-500;
 }
 
-.btn-primary {
-  @apply bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center;
-}
-
-.btn-secondary {
-  @apply bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors inline-flex items-center;
-}
-
-.btn-danger {
-  @apply bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center;
+.input:disabled {
+  @apply bg-gray-100 cursor-not-allowed;
 }
 </style>

@@ -76,12 +76,13 @@
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Oficina</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código Patrimonial</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
               <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-if="impresorasPaginadas.length === 0">
-              <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+              <td colspan="8" class="px-6 py-8 text-center text-gray-500">
                 <i class="fas fa-search-minus text-gray-300 text-2xl mb-2"></i>
                 <p>No se encontraron impresoras con los filtros actuales</p>
               </td>
@@ -94,9 +95,6 @@
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{{ impresora.id }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm">
                 <div class="font-medium">{{ impresora.modelo }}</div>
-                <div v-if="impresora.tipo" class="text-xs text-gray-500">
-                  {{ impresora.tipo }}
-                </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm">
                 <div class="font-mono">{{ impresora.ip || '-' }}</div>
@@ -114,6 +112,11 @@
                   <div class="text-xs text-gray-500">{{ impresora.usuario.dni }}</div>
                 </div>
                 <div v-else class="text-gray-400">Sin asignar</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
+                <span class="px-2 py-1 rounded-full text-xs" :class="getEstadoClass(impresora.estado)">
+                  {{ impresora.estado || '-' }}
+                </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
                 <div class="flex justify-center space-x-2">
@@ -194,6 +197,22 @@
         <p class="text-gray-600 mb-4">
           ¿Estás seguro de eliminar la impresora <strong class="text-gray-800">{{ impresoraAEliminar.modelo }}</strong>?
         </p>
+        
+        <div class="bg-gray-50 p-3 rounded-md mb-4">
+          <div class="grid grid-cols-2 gap-2 text-sm">
+            <div class="text-gray-500">Estado:</div>
+            <div>
+              <span class="px-2 py-1 rounded-full text-xs" :class="getEstadoClass(impresoraAEliminar.estado)">
+                {{ impresoraAEliminar.estado || '-' }}
+              </span>
+            </div>
+            <div class="text-gray-500">Oficina:</div>
+            <div>{{ impresoraAEliminar.oficina }}</div>
+            <div class="text-gray-500">Código Patrimonial:</div>
+            <div>{{ impresoraAEliminar.codigoPatrimonial || '-' }}</div>
+          </div>
+        </div>
+        
         <p class="text-sm text-gray-500 mb-6">
           <i class="fas fa-info-circle mr-1"></i> Esta acción no se puede deshacer.
         </p>
@@ -243,7 +262,7 @@ interface Impresora {
   codigoPatrimonial: string;
   usuarioId?: number;
   usuario?: Usuario;
-  tipo?: string;
+  estado?: string;
 }
 
 export default defineComponent({
@@ -286,7 +305,8 @@ export default defineComponent({
         impresora.mac?.toLowerCase().includes(termino) ||
         impresora.oficina?.toLowerCase().includes(termino) ||
         impresora.codigoPatrimonial?.toLowerCase().includes(termino) ||
-        (impresora.usuario?.nombres + ' ' + impresora.usuario?.apellidos)?.toLowerCase().includes(termino)
+        (impresora.usuario?.nombres + ' ' + impresora.usuario?.apellidos)?.toLowerCase().includes(termino) ||
+        impresora.estado?.toLowerCase().includes(termino)
       );
     });
 
@@ -301,6 +321,16 @@ export default defineComponent({
     );
 
     // Métodos
+    const getEstadoClass = (estado?: string) => {
+      const estados: Record<string, string> = {
+        'activo': 'bg-green-100 text-green-800',
+        'inactivo': 'bg-gray-100 text-gray-800',
+        'mantenimiento': 'bg-yellow-100 text-yellow-800',
+        'baja': 'bg-red-100 text-red-800'
+      };
+      return estados[estado?.toLowerCase() || ''] || 'bg-gray-100 text-gray-800';
+    };
+
     const cambiarPagina = (pagina: number) => {
       if (pagina >= 1 && pagina <= totalPaginas.value) {
         paginaActual.value = pagina;
@@ -347,7 +377,7 @@ export default defineComponent({
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Impresoras');
 
-        // Columnas actualizadas
+        // Columnas
         worksheet.columns = [
           { header: 'ID', key: 'id', width: 10 },
           { header: 'Modelo', key: 'modelo', width: 25 },
@@ -355,7 +385,9 @@ export default defineComponent({
           { header: 'MAC', key: 'mac', width: 20 },
           { header: 'Oficina', key: 'oficina', width: 20 },
           { header: 'Código Patrimonial', key: 'codigoPatrimonial', width: 20 },
-          { header: 'Usuario', key: 'usuario', width: 30 }
+          { header: 'Estado', key: 'estado', width: 15 },
+          { header: 'Usuario', key: 'usuario', width: 30 },
+          { header: 'DNI Usuario', key: 'dniUsuario', width: 15 }
         ];
 
         // Estilo cabeceras
@@ -374,16 +406,18 @@ export default defineComponent({
           };
         });
 
-        // Datos actualizados
+        // Datos
         impresoras.value.forEach((impresora, index) => {
           const row = worksheet.addRow({
             id: impresora.id,
             modelo: impresora.modelo,
-            ip: impresora.ip,
-            mac: impresora.mac,
+            ip: impresora.ip || '-',
+            mac: impresora.mac || '-',
             oficina: impresora.oficina,
             codigoPatrimonial: impresora.codigoPatrimonial || '-',
-            usuario: impresora.usuario ? `${impresora.usuario.nombres} ${impresora.usuario.apellidos}` : 'Sin asignar'
+            estado: impresora.estado || '-',
+            usuario: impresora.usuario ? `${impresora.usuario.nombres} ${impresora.usuario.apellidos}` : 'Sin asignar',
+            dniUsuario: impresora.usuario?.dni || '-'
           });
 
           // Alternar colores de fila
@@ -454,7 +488,8 @@ export default defineComponent({
       confirmarEliminacion,
       cancelarEliminacion,
       eliminarImpresora,
-      exportarImpresoras
+      exportarImpresoras,
+      getEstadoClass
     };
   }
 });
