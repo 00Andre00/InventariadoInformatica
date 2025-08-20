@@ -252,54 +252,57 @@
       </div>
     </div>
 
-    <!-- Modal de impresoras del usuario -->
-    <div v-if="mostrarModalImpresoras" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg font-semibold">
-            <i class="fas fa-print mr-2 text-purple-500"></i>
-            Impresoras asignadas a {{ usuarioSeleccionado?.nombres }} {{ usuarioSeleccionado?.apellidos }}
-          </h3>
-          <button @click="cerrarModalImpresoras" class="text-gray-500 hover:text-gray-700">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        
-        <div v-if="cargandoImpresoras" class="text-center py-4">
-          <i class="fas fa-circle-notch fa-spin text-purple-500 text-xl"></i>
-          <p class="text-gray-600 mt-2">Cargando impresoras...</p>
-        </div>
-        
-        <div v-else>
-          <div v-if="impresorasUsuario.length === 0" class="text-center py-4 text-gray-500">
-            <i class="fas fa-print text-2xl mb-2"></i>
-            <p>No hay impresoras asignadas a este usuario</p>
-          </div>
+<!-- Modal de impresoras del usuario - Versión corregida -->
+<div v-if="mostrarModalImpresoras" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg font-semibold">
+        <i class="fas fa-print mr-2 text-purple-500"></i>
+        Impresoras asignadas a {{ usuarioSeleccionado?.nombres }} {{ usuarioSeleccionado?.apellidos }}
+      </h3>
+      <button @click="cerrarModalImpresoras" class="text-gray-500 hover:text-gray-700">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div v-if="cargandoImpresoras" class="text-center py-4">
+      <i class="fas fa-circle-notch fa-spin text-purple-500 text-xl"></i>
+      <p class="text-gray-600 mt-2">Cargando impresoras...</p>
+    </div>
+    
+    <div v-else>
+      <div v-if="impresorasUsuario.length === 0" class="text-center py-4 text-gray-500">
+        <i class="fas fa-print text-2xl mb-2"></i>
+        <p>No hay impresoras asignadas a este usuario</p>
+      </div>
 
-          <div v-else class="space-y-4">
-            <div 
-              v-for="impresora in impresorasUsuario" 
-              :key="impresora.id"
-              class="border rounded-lg p-4 hover:shadow-md transition-shadow"
-            >
-              <div class="flex justify-between items-start">
-                <div>
-                  <h4 class="font-medium">{{ impresora.modelo }}</h4>
-                  <p class="text-sm text-gray-500 mt-1">
-                    <span class="font-mono">{{ impresora.ip }}</span> • 
-                    <span class="font-medium">{{ impresora.codigoPatrimonial }}</span>
-                  </p>
-                </div>
-                <!-- <span class="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-800">
-                  {{ impresora.estado || 'Activa' }}
-                </span> -->
-              </div>
+      <div v-else class="space-y-4">
+        <div 
+          v-for="impresora in impresorasUsuario" 
+          :key="impresora.id"
+          class="border rounded-lg p-4 hover:shadow-md transition-shadow"
+        >
+          <div class="flex justify-between items-start">
+            <div>
+              <h4 class="font-medium">{{ impresora.modelo }}</h4>
+              <p class="text-sm text-gray-500 mt-1">
+                <span class="font-mono">{{ impresora.ip || 'Sin IP' }}</span> • 
+                <span class="font-medium">{{ impresora.codigoPatrimonial || 'Sin código' }}</span>
+              </p>
             </div>
+            <span 
+              class="text-xs px-2 py-1 rounded-full" 
+              :class="getEstadoImpresoraClass(impresora.estado)"
+            >
+              {{ impresora.estado || 'Sin estado' }}
+            </span>
           </div>
         </div>
       </div>
     </div>
   </div>
+</div>
+</div>
 </template>
 
 <script lang="ts">
@@ -331,9 +334,19 @@ interface Equipo {
 interface Impresora {
   id: number;
   modelo: string;
-  ip: string;
-  codigoPatrimonial: string;
-  estado?: string;
+  ip?: string;
+  mac?: string;
+  oficina?: string;
+  codigoPatrimonial?: string;
+  estado: string; // Cambiado a obligatorio ya que la API siempre lo incluye
+  usuarioId?: number;
+  usuario?: {
+    id: number;
+    dni: string;
+    nombres: string;
+    apellidos: string;
+    tipoContrato: string;
+  };
 }
 
 export default defineComponent({
@@ -403,6 +416,26 @@ export default defineComponent({
       }
     };
 
+
+const getEstadoImpresoraClass = (estado?: string) => {
+  const estados: Record<string, string> = {
+    'bueno': 'bg-green-100 text-green-800',
+    'regular': 'bg-yellow-100 text-yellow-800',
+    'malo': 'bg-red-100 text-red-800',
+    'activo': 'bg-green-100 text-green-800',
+    'inactivo': 'bg-gray-100 text-gray-800',
+    'mantenimiento': 'bg-yellow-100 text-yellow-800',
+    'baja': 'bg-red-100 text-red-800'
+  };
+  return estados[estado?.toLowerCase() || ''] || 'bg-gray-100 text-gray-800';
+};
+
+const formatearEstado = (estado: string) => {
+  if (!estado) return 'Sin estado';
+  // Mantener el formato original del API (primera letra mayúscula)
+  return estado;
+};
+
     const getBadgeContrato = (tipoContrato: string) => {
       const tipos: Record<string, string> = {
         'Nombrado': 'bg-green-100 text-green-800',
@@ -421,6 +454,7 @@ export default defineComponent({
       usuarioSeleccionado.value = usuario;
       mostrarModalEquipos.value = true;
       cargandoEquipos.value = true;
+      equiposUsuario.value = [];
       
       try {
         const response = await axios.get(`https://isiback.drtchco.gob.pe/api/usuarios/${usuario.id}/equipos`);
@@ -433,21 +467,31 @@ export default defineComponent({
       }
     };
 
-    const verImpresoras = async (usuario: Usuario) => {
-      usuarioSeleccionado.value = usuario;
-      mostrarModalImpresoras.value = true;
-      cargandoImpresoras.value = true;
-      
-      try {
-        const response = await axios.get(`https://isiback.drtchco.gob.pe/api/usuarios/${usuario.id}/impresoras`);
-        impresorasUsuario.value = response.data.data;
-      } catch (err) {
-        console.error('Error al cargar impresoras:', err);
-        impresorasUsuario.value = [];
-      } finally {
-        cargandoImpresoras.value = false;
-      }
-    };
+
+const verImpresoras = async (usuario: Usuario) => {
+  usuarioSeleccionado.value = usuario;
+  mostrarModalImpresoras.value = true;
+  cargandoImpresoras.value = true;
+  impresorasUsuario.value = [];
+  
+  try {
+    // Usar el endpoint general y filtrar por usuarioId
+    const response = await axios.get('https://isiback.drtchco.gob.pe/api/impresoras');
+    
+    // Filtrar las impresoras que pertenecen al usuario
+    const impresorasDelUsuario = response.data.data.filter(
+      (impresora: any) => impresora.usuarioId === usuario.id
+    );
+    
+    impresorasUsuario.value = impresorasDelUsuario;
+    console.log('🔍 Impresoras filtradas:', impresorasDelUsuario); // Debug
+  } catch (err) {
+    console.error('Error al cargar impresoras:', err);
+    impresorasUsuario.value = [];
+  } finally {
+    cargandoImpresoras.value = false;
+  }
+};
 
     const cerrarModalEquipos = () => {
       mostrarModalEquipos.value = false;
@@ -633,7 +677,9 @@ export default defineComponent({
       confirmarEliminacion,
       cancelarEliminacion,
       eliminarUsuario,
-      exportarUsuarios
+      exportarUsuarios,
+      getEstadoImpresoraClass,
+      formatearEstado
     };
   }
 });
@@ -667,6 +713,18 @@ export default defineComponent({
 .pagination-button {
   @apply w-10 h-10 flex items-center justify-center rounded-md border border-gray-300 bg-white hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
 }
+
+/* Estilos para los estados de impresoras */
+.bg-green-100 { background-color: #dcfce7; }
+.text-green-800 { color: #166534; }
+.bg-yellow-100 { background-color: #fef9c3; }
+.text-yellow-800 { color: #854d0e; }
+.bg-red-100 { background-color: #fee2e2; }
+.text-red-800 { color: #991b1b; }
+.bg-blue-100 { background-color: #dbeafe; }
+.text-blue-800 { color: #1e40af; }
+.bg-gray-100 { background-color: #f3f4f6; }
+.text-gray-800 { color: #1f2937; }
 
 /* Animaciones */
 .fade-enter-active,
