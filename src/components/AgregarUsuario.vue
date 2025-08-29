@@ -100,6 +100,8 @@ import { defineComponent, ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 
+import '../interceptors/axios';
+
 interface NuevoUsuario {
   dni: string;
   nombres: string;

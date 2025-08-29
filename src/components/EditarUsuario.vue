@@ -157,6 +157,8 @@ import { defineComponent, ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import axios from 'axios';
 
+import '../interceptors/axios';
+
 interface Usuario {
   id: number;
   dni: string;
