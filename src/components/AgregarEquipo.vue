@@ -212,6 +212,8 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
 import axios from 'axios';
+// AGREGAR ESTAS LÍNEAS:
+import '../interceptors/axios';
 
 interface Usuario {
   id: number;

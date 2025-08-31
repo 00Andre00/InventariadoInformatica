@@ -319,6 +319,8 @@ import { useRouter } from 'vue-router';
 import axios from 'axios';
 import ExcelJS from 'exceljs';
 
+import '../interceptors/axios';
+
 interface Usuario {
   id: number;
   dni: string;
