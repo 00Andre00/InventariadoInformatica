@@ -144,6 +144,8 @@
 import { defineComponent, ref, computed } from 'vue';
 import axios from 'axios';
 
+import '../interceptors/axios';
+
 interface Usuario {
   id: number;
   dni: string;
