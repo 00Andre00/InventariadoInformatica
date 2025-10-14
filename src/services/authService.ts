@@ -1,7 +1,8 @@
 // src/services/authService.ts
 import axios from 'axios';
 
-const API_BASE_URL = 'https://isiback.drtchco.gob.pe/api';
+// Usar variable de entorno para la URL base
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 interface LoginResponse {
   token: string;
