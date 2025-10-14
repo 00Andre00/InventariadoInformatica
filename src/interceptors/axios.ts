@@ -3,6 +3,9 @@ import axios from 'axios';
 import authService from '../services/authService';
 import router from '../routes';
 
+// Configurar la URL base desde las variables de entorno de Vite
+axios.defaults.baseURL = import.meta.env.VITE_API_URL;
+
 // Interceptor para requests
 axios.interceptors.request.use(
   (config) => {
