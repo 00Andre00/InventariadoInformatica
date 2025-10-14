@@ -11,62 +11,84 @@
       <form @submit.prevent="crearUsuario" class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label for="dni" class="block text-sm font-medium text-gray-700 mb-1">DNI*</label>
-            <input 
-              v-model="nuevoUsuario.dni" 
-              id="dni" 
-              type="text" 
-              class="input" 
+            <label
+              for="dni"
+              class="block text-sm font-medium text-gray-700 mb-1"
+              >DNI*</label
+            >
+            <input
+              v-model="nuevoUsuario.dni"
+              id="dni"
+              type="text"
+              class="input"
               required
               placeholder="Ingrese 8 dígitos"
               maxlength="8"
               @blur="validarDNI"
             />
-            <p v-if="errores.dni" class="text-xs text-red-500 mt-1">{{ errores.dni }}</p>
+            <p v-if="errores.dni" class="text-xs text-red-500 mt-1">
+              {{ errores.dni }}
+            </p>
           </div>
 
           <div>
-            <label for="nombres" class="block text-sm font-medium text-gray-700 mb-1">Nombres*</label>
-            <input 
-              v-model="nuevoUsuario.nombres" 
-              id="nombres" 
-              type="text" 
-              class="input" 
+            <label
+              for="nombres"
+              class="block text-sm font-medium text-gray-700 mb-1"
+              >Nombres*</label
+            >
+            <input
+              v-model="nuevoUsuario.nombres"
+              id="nombres"
+              type="text"
+              class="input"
               required
               placeholder="Ej: Juan Carlos"
             />
           </div>
 
           <div>
-            <label for="apellidos" class="block text-sm font-medium text-gray-700 mb-1">Apellidos*</label>
-            <input 
-              v-model="nuevoUsuario.apellidos" 
-              id="apellidos" 
-              type="text" 
-              class="input" 
+            <label
+              for="apellidos"
+              class="block text-sm font-medium text-gray-700 mb-1"
+              >Apellidos*</label
+            >
+            <input
+              v-model="nuevoUsuario.apellidos"
+              id="apellidos"
+              type="text"
+              class="input"
               required
               placeholder="Ej: Pérez López"
             />
           </div>
 
           <div>
-            <label for="oficina" class="block text-sm font-medium text-gray-700 mb-1">Oficina*</label>
-            <input 
-              v-model="nuevoUsuario.oficina" 
-              id="oficina" 
-              type="text" 
-              class="input" 
+            <label
+              for="oficina"
+              class="block text-sm font-medium text-gray-700 mb-1"
+              >Oficina*</label
+            >
+            <input
+              v-model="nuevoUsuario.oficina"
+              id="oficina"
+              type="text"
+              class="input"
               required
               placeholder="Ej: Gerencia de TI"
             />
           </div>
 
           <div>
-            <label for="tipoContrato" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Contrato*</label>
-            <select 
-              v-model="nuevoUsuario.tipoContrato" 
-              id="tipoContrato" 
-              class="input" 
+            <label
+              for="tipoContrato"
+              class="block text-sm font-medium text-gray-700 mb-1"
+              >Tipo de Contrato*</label
+            >
+            <select
+              v-model="nuevoUsuario.tipoContrato"
+              id="tipoContrato"
+              class="input"
               required
             >
               <option value="">Seleccione...</option>
@@ -79,8 +101,8 @@
         </div>
 
         <div class="pt-4">
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             class="btn-primary"
             :disabled="loading || hayErrores"
           >
@@ -96,11 +118,11 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
-import axios from 'axios';
+import { defineComponent, ref, computed } from "vue";
+import { useRouter } from "vue-router";
+import axios from "axios";
 
-import '../interceptors/axios';
+import "../interceptors/axios";
 
 interface NuevoUsuario {
   dni: string;
@@ -111,55 +133,58 @@ interface NuevoUsuario {
 }
 
 export default defineComponent({
-  name: 'AgregarUsuario',
+  name: "AgregarUsuario",
   setup() {
     const router = useRouter();
     const loading = ref(false);
-    
+
     const nuevoUsuario = ref<NuevoUsuario>({
-      dni: '',
-      nombres: '',
-      apellidos: '',
-      oficina: '',
-      tipoContrato: ''
+      dni: "",
+      nombres: "",
+      apellidos: "",
+      oficina: "",
+      tipoContrato: "",
     });
 
     const errores = ref({
-      dni: ''
+      dni: "",
     });
 
     const hayErrores = computed(() => {
-      return Object.values(errores.value).some(error => error !== '') ||
+      return (
+        Object.values(errores.value).some((error) => error !== "") ||
         !nuevoUsuario.value.dni ||
         !nuevoUsuario.value.nombres ||
         !nuevoUsuario.value.apellidos ||
         !nuevoUsuario.value.oficina ||
-        !nuevoUsuario.value.tipoContrato;
+        !nuevoUsuario.value.tipoContrato
+      );
     });
 
     const validarDNI = () => {
       const dniRegex = /^\d{8}$/;
       if (!dniRegex.test(nuevoUsuario.value.dni)) {
-        errores.value.dni = 'El DNI debe tener exactamente 8 dígitos numéricos';
+        errores.value.dni = "El DNI debe tener exactamente 8 dígitos numéricos";
       } else {
-        errores.value.dni = '';
+        errores.value.dni = "";
       }
     };
 
     const crearUsuario = async () => {
       try {
         loading.value = true;
-        await axios.post('https://isiback.drtchco.gob.pe/api/usuarios', nuevoUsuario.value);
-        
-        alert('Usuario registrado correctamente');
-        router.push('/usuarios');
-        
+        await axios.post("/usuarios", nuevoUsuario.value);
+
+        alert("Usuario registrado correctamente");
+        router.push("/usuarios");
       } catch (error: any) {
-        console.error('Error al registrar usuario:', error);
+        console.error("Error al registrar usuario:", error);
         if (error.response?.data?.error) {
           alert(error.response.data.error);
         } else {
-          alert('Error al registrar el usuario. Por favor, intente nuevamente.');
+          alert(
+            "Error al registrar el usuario. Por favor, intente nuevamente."
+          );
         }
       } finally {
         loading.value = false;
@@ -172,7 +197,7 @@ export default defineComponent({
       errores,
       hayErrores,
       validarDNI,
-      crearUsuario
+      crearUsuario,
     };
   },
 });
