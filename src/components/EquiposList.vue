@@ -223,6 +223,24 @@
                   >
                     <i class="fas fa-tools"></i>
                   </button>
+
+                  <!-- 🔽 Tus nuevos botones van aquí -->
+                  <button
+                    v-if="isInformatica"
+                    @click="enviarARevision(equipo)"
+                    class="btn-action bg-yellow-600 text-white hover:bg-yellow-700"
+                    title="Enviar a Revisión"
+                  >
+                    <i class="fas fa-tools"></i>
+                  </button>
+
+                  <button
+                    @click="generarReporte(equipo)"
+                    class="btn-action bg-gray-600 text-white hover:bg-gray-700"
+                    title="Generar Reporte"
+                  >
+                    <i class="fas fa-file-pdf"></i>
+                  </button>
                 </div>
               </td>
             </tr>
@@ -404,6 +422,7 @@ import { defineComponent, ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 import ExcelJS from "exceljs";
+import { useAuth } from "@/composables/useAuth";
 
 import "../interceptors/axios";
 
@@ -462,19 +481,31 @@ export default defineComponent({
     const equipoSeleccionado = ref<Equipo | null>(null);
     const cargandoMantenimientos = ref(false);
 
-    // Cargar equipos desde la API
     const cargarEquipos = async () => {
       loading.value = true;
       error.value = "";
 
       try {
         const response = await axios.get("/equipos");
-        equipos.value = response.data.data.map((equipo: any) => ({
-          ...equipo,
-          tieneTeclado: Boolean(equipo.tieneTeclado),
-          tieneMouse: Boolean(equipo.tieneMouse),
-          estadoMonitor: equipo.estadoMonitor || "", // Asegurar que existe el campo
-        }));
+        // 🔽 CORREGIDO - Mostrar solo equipos asignados o sin estado_especial
+        equipos.value = response.data.data
+          .filter((equipo: any) => {
+            // Mostrar equipos que están asignados o no tienen estado_especial
+            return (
+              equipo.estado_especial === "asignado" || !equipo.estado_especial
+            );
+          })
+          .map((equipo: any) => ({
+            ...equipo,
+            tieneTeclado: Boolean(equipo.tieneTeclado),
+            tieneMouse: Boolean(equipo.tieneMouse),
+            estadoMonitor: equipo.estadoMonitor || "",
+          }));
+
+        console.log(
+          "📋 Equipos cargados en lista general:",
+          equipos.value.length
+        );
       } catch (err: any) {
         console.error("Error al cargar equipos:", err);
         error.value =
@@ -737,7 +768,29 @@ export default defineComponent({
         error.value = "Error al exportar equipos a Excel";
       }
     };
+    const { isInformatica } = useAuth();
 
+    const enviarARevision = async (equipo: Equipo) => {
+      if (
+        !confirm(
+          `¿Enviar el equipo ${equipo.marca} ${equipo.modelo} a revisión?`
+        )
+      )
+        return;
+
+      try {
+        await axios.post(`/sistema/equipos/${equipo.id}/revision`);
+        alert("Equipo enviado a revisión correctamente");
+        cargarEquipos();
+      } catch (error) {
+        console.error("Error al enviar equipo a revisión:", error);
+        alert("Error al enviar equipo a revisión");
+      }
+    };
+
+    const generarReporte = (equipo: Equipo) => {
+      window.open(`/sistema/reportes/cambio/equipo/${equipo.id}`, "_blank");
+    };
     // Cargar datos al montar el componente
     onMounted(cargarEquipos);
 
@@ -754,6 +807,9 @@ export default defineComponent({
       cargandoMantenimientos,
       equiposFiltrados,
       equiposPaginados,
+      isInformatica,
+      enviarARevision,
+      generarReporte,
       totalPaginas,
       cargarEquipos,
       cambiarPagina,
