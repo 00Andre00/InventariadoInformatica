@@ -1,7 +1,7 @@
 // src/services/authService.ts
 import axios from 'axios';
 
-// Usar variable de entorno para la URL base
+// URL base corregida - usa localhost por defecto
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 interface LoginResponse {
@@ -76,6 +76,24 @@ class AuthService {
   isAdmin(): boolean {
     const user = this.getUser();
     return user?.rol === 'admin';
+  }
+
+  // Verificar si es informática
+  isInformatica(): boolean {
+    const user = this.getUser();
+    return user?.rol === 'informatica' || user?.rol === 'admin';
+  }
+
+  // Verificar si es patrimonio
+  isPatrimonio(): boolean {
+    const user = this.getUser();
+    return user?.rol === 'patrimonio';
+  }
+
+  // Obtener rol del usuario
+  getRol(): string {
+    const user = this.getUser();
+    return user?.rol || '';
   }
 
   // Verificar token con el servidor
