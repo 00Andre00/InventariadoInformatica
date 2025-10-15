@@ -1,96 +1,134 @@
 // src/router/index.ts
-import { createRouter, createWebHistory } from 'vue-router';
-import authService from '../services/authService';
+import { createRouter, createWebHistory } from "vue-router";
+import authService from "../services/authService";
 
-// Importar componentes
-import Login from '../components/Login.vue';
-import EquiposList from '../components/EquiposList.vue';
-import AgregarEquipo from '../components/AgregarEquipo.vue';
-import EditarEquipo from '../components/EditarEquipo.vue';
-import ListaImpresoras from '../components/ListaImpresoras.vue';
-import AgregarImpresora from '../components/AgregarImpresora.vue';
-import EditarImpresora from '../components/EditarImpresora.vue';
-import ListaUsuarios from '../components/ListaUsuarios.vue';
-import AgregarUsuario from '../components/AgregarUsuario.vue';
-import EditarUsuario from '../components/EditarUsuario.vue';
+// Importar componentes existentes
+import Login from "../components/Login.vue";
+import EquiposList from "../components/EquiposList.vue";
+import AgregarEquipo from "../components/AgregarEquipo.vue";
+import EditarEquipo from "../components/EditarEquipo.vue";
+import ListaImpresoras from "../components/ListaImpresoras.vue";
+import AgregarImpresora from "../components/AgregarImpresora.vue";
+import EditarImpresora from "../components/EditarImpresora.vue";
+import ListaUsuarios from "../components/ListaUsuarios.vue";
+import AgregarUsuario from "../components/AgregarUsuario.vue";
+import EditarUsuario from "../components/EditarUsuario.vue";
+
+// Importar nuevos componentes del sistema
+import UsuariosSistema from "../components/sistema/UsuariosSistema.vue";
+import RevisionEquipos from "../components/sistema/RevisionEquipos.vue";
+import EquiposDisponibles from "../components/sistema/EquiposDisponibles.vue";
+import EquiposBajas from "../components/sistema/EquiposBajas.vue";
 
 const routes = [
   // Ruta de login (pública)
-  { 
-    path: '/login', 
-    name: 'Login',
+  {
+    path: "/login",
+    name: "Login",
     component: Login,
-    meta: { requiresGuest: true } // Solo accesible si NO está autenticado
+    meta: { requiresGuest: true },
   },
-  
-  // Rutas protegidas
-  { 
-    path: '/', 
-    name: 'Equipos',
+
+  // Rutas protegidas principales
+  {
+    path: "/",
+    name: "Equipos",
     component: EquiposList,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
   },
-  { 
-    path: '/agregar', 
-    name: 'AgregarEquipo',
+  {
+    path: "/agregar",
+    name: "AgregarEquipo",
     component: AgregarEquipo,
-    meta: { requiresAuth: true, requiresAdmin: true }
+    meta: { requiresAuth: true, requiresInformatica: true },
   },
-  { 
-    path: '/editar/:id', 
-    name: 'EditarEquipo',
-    component: EditarEquipo, 
+  {
+    path: "/editar/:id",
+    name: "EditarEquipo",
+    component: EditarEquipo,
     props: true,
-    meta: { requiresAuth: true, requiresAdmin: true }
+    meta: { requiresAuth: true, requiresInformatica: true },
   },
-  
+
   // Rutas de Impresoras
-  { 
-    path: '/impresoras', 
-    name: 'Impresoras',
+  {
+    path: "/impresoras",
+    name: "Impresoras",
     component: ListaImpresoras,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
   },
-  { 
-    path: '/impresoras/agregar', 
-    name: 'AgregarImpresora',
+  {
+    path: "/impresoras/agregar",
+    name: "AgregarImpresora",
     component: AgregarImpresora,
-    meta: { requiresAuth: true, requiresAdmin: true }
+    meta: { requiresAuth: true, requiresInformatica: true },
   },
-  { 
-    path: '/impresoras/editar/:id', 
-    name: 'EditarImpresora',
-    component: EditarImpresora, 
+  {
+    path: "/impresoras/editar/:id",
+    name: "EditarImpresora",
+    component: EditarImpresora,
     props: true,
-    meta: { requiresAuth: true, requiresAdmin: true }
+    meta: { requiresAuth: true, requiresInformatica: true },
   },
-  
+
   // Rutas de Usuarios
-  { 
-    path: '/usuarios', 
-    name: 'Usuarios',
+  {
+    path: "/usuarios",
+    name: "Usuarios",
     component: ListaUsuarios,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
   },
-  { 
-    path: '/usuarios/agregar', 
-    name: 'AgregarUsuario',
+  {
+    path: "/usuarios/agregar",
+    name: "AgregarUsuario",
     component: AgregarUsuario,
-    meta: { requiresAuth: true, requiresAdmin: true }
+    meta: { requiresAuth: true, requiresInformatica: true },
   },
-  { 
-    path: '/usuarios/editar/:id', 
-    name: 'EditarUsuario',
-    component: EditarUsuario, 
+  {
+    path: "/usuarios/editar/:id",
+    name: "EditarUsuario",
+    component: EditarUsuario,
     props: true,
-    meta: { requiresAuth: true, requiresAdmin: true }
+    meta: { requiresAuth: true, requiresInformatica: true },
+  },
+
+  // Nuevas rutas del sistema - CORREGIDAS
+  {
+    path: "/sistema/usuarios",
+    name: "UsuariosSistema",
+    component: UsuariosSistema,
+    meta: { requiresAuth: true, requiresAdmin: true },
+  },
+  {
+    path: "/sistema/revision",
+    name: "RevisionEquipos",
+    component: RevisionEquipos,
+    meta: { requiresAuth: true, requiresInformatica: true }, // ✅ Informática también
+  },
+  {
+    path: "/sistema/disponibles",
+    name: "EquiposDisponibles",
+    component: EquiposDisponibles,
+    meta: { requiresAuth: true, requiresInformatica: true }, // ✅ Informática también
+  },
+  {
+    path: "/sistema/bajas",
+    name: "EquiposBajas",
+    component: EquiposBajas,
+    meta: { requiresAuth: true, requiresPatrimonio: true },
+  },
+  {
+    path: "/sistema/cambiar-password",
+    name: "CambiarPassword",
+    component: () => import("../components/sistema/EditarPassword.vue"),
+    meta: { requiresAuth: true },
   },
 
   // Ruta de fallback
   {
-    path: '/:pathMatch(.*)*',
-    redirect: '/'
-  }
+    path: "/:pathMatch(.*)*",
+    redirect: "/",
+  },
 ];
 
 const router = createRouter({
@@ -102,29 +140,42 @@ const router = createRouter({
 router.beforeEach(async (to, _from, next) => {
   const isAuthenticated = authService.isAuthenticated();
   const isAdmin = authService.isAdmin();
+  const isInformatica = authService.isInformatica();
+  const isPatrimonio = authService.isPatrimonio();
 
   // Si la ruta requiere ser invitado (como login) y ya está autenticado
   if (to.meta.requiresGuest && isAuthenticated) {
-    return next('/');
+    return next("/");
   }
 
   // Si la ruta requiere autenticación
   if (to.meta.requiresAuth) {
     if (!isAuthenticated) {
-      return next('/login');
+      return next("/login");
     }
 
     // Verificar token con el servidor
     const tokenValid = await authService.verifyToken();
     if (!tokenValid) {
-      return next('/login');
+      return next("/login");
     }
 
     // Si la ruta requiere permisos de admin
     if (to.meta.requiresAdmin && !isAdmin) {
-      // Podrías mostrar un mensaje de error o redirigir
-      alert('No tienes permisos para acceder a esta página');
-      return next('/');
+      alert("No tienes permisos de administrador para acceder a esta página");
+      return next("/");
+    }
+
+    // Si la ruta requiere permisos de informática
+    if (to.meta.requiresInformatica && !isInformatica) {
+      alert("No tienes permisos de informática para acceder a esta página");
+      return next("/");
+    }
+
+    // Si la ruta requiere permisos de patrimonio
+    if (to.meta.requiresPatrimonio && !isPatrimonio) {
+      alert("No tienes permisos de patrimonio para acceder a esta página");
+      return next("/");
     }
   }
 
