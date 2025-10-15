@@ -36,6 +36,40 @@
               <i class="fas fa-print mr-1"></i> Impresoras
             </router-link>
 
+            <!-- Nuevos enlaces para admin -->
+            <router-link 
+              v-if="isAdmin"
+              to="/sistema/usuarios" 
+              class="px-3 py-1 rounded-md hover:bg-gray-700 hover:text-green-400 transition-colors duration-200"
+              active-class="bg-gray-700 text-green-400"
+            >
+              <i class="fas fa-user-cog mr-1"></i> Usuarios Sistema
+            </router-link>
+            <router-link 
+              v-if="isAdmin"
+              to="/sistema/revision" 
+              class="px-3 py-1 rounded-md hover:bg-gray-700 hover:text-green-400 transition-colors duration-200"
+              active-class="bg-gray-700 text-green-400"
+            >
+              <i class="fas fa-tools mr-1"></i> Revisión
+            </router-link>
+            <router-link 
+              v-if="isAdmin"
+              to="/sistema/disponibles" 
+              class="px-3 py-1 rounded-md hover:bg-gray-700 hover:text-green-400 transition-colors duration-200"
+              active-class="bg-gray-700 text-green-400"
+            >
+              <i class="fas fa-check-circle mr-1"></i> Disponibles
+            </router-link>
+            <router-link 
+              v-if="isPatrimonio"
+              to="/sistema/bajas" 
+              class="px-3 py-1 rounded-md hover:bg-gray-700 hover:text-green-400 transition-colors duration-200"
+              active-class="bg-gray-700 text-green-400"
+            >
+              <i class="fas fa-archive mr-1"></i> Bajas
+            </router-link>
+
             <!-- Separador -->
             <div class="border-l border-gray-600 h-6 mx-2"></div>
 
@@ -45,10 +79,10 @@
                 <i class="fas fa-user mr-2 text-green-400"></i>
                 <span class="text-sm">{{ currentUser?.nombre || 'Usuario' }}</span>
                 <span 
-                  v-if="isAdmin" 
-                  class="ml-2 text-xs bg-green-500 text-white px-2 py-0.5 rounded-full"
+                  class="ml-2 text-xs px-2 py-0.5 rounded-full"
+                  :class="getRolBadgeClass()"
                 >
-                  Admin
+                  {{ getRolText() }}
                 </span>
               </div>
               
@@ -103,6 +137,44 @@
             <i class="fas fa-print mr-2"></i> Impresoras
           </router-link>
 
+          <!-- Nuevos enlaces móviles para admin -->
+          <router-link 
+            v-if="isAdmin"
+            to="/sistema/usuarios" 
+            class="block px-3 py-2 rounded-md hover:bg-gray-700 hover:text-green-400 transition-colors duration-200"
+            active-class="bg-gray-700 text-green-400"
+            @click="isMobileMenuOpen = false"
+          >
+            <i class="fas fa-user-cog mr-2"></i> Usuarios Sistema
+          </router-link>
+          <router-link 
+            v-if="isAdmin"
+            to="/sistema/revision" 
+            class="block px-3 py-2 rounded-md hover:bg-gray-700 hover:text-green-400 transition-colors duration-200"
+            active-class="bg-gray-700 text-green-400"
+            @click="isMobileMenuOpen = false"
+          >
+            <i class="fas fa-tools mr-2"></i> Revisión
+          </router-link>
+          <router-link 
+            v-if="isAdmin"
+            to="/sistema/disponibles" 
+            class="block px-3 py-2 rounded-md hover:bg-gray-700 hover:text-green-400 transition-colors duration-200"
+            active-class="bg-gray-700 text-green-400"
+            @click="isMobileMenuOpen = false"
+          >
+            <i class="fas fa-check-circle mr-2"></i> Disponibles
+          </router-link>
+          <router-link 
+            v-if="isPatrimonio"
+            to="/sistema/bajas" 
+            class="block px-3 py-2 rounded-md hover:bg-gray-700 hover:text-green-400 transition-colors duration-200"
+            active-class="bg-gray-700 text-green-400"
+            @click="isMobileMenuOpen = false"
+          >
+            <i class="fas fa-archive mr-2"></i> Bajas
+          </router-link>
+
           <!-- Información del usuario en móvil -->
           <div class="border-t border-gray-700 pt-2 mt-2">
             <div class="px-3 py-2">
@@ -111,10 +183,10 @@
                   <i class="fas fa-user mr-2 text-green-400"></i>
                   <span class="text-sm">{{ currentUser?.nombre || 'Usuario' }}</span>
                   <span 
-                    v-if="isAdmin" 
-                    class="ml-2 text-xs bg-green-500 text-white px-2 py-0.5 rounded-full"
+                    class="ml-2 text-xs px-2 py-0.5 rounded-full"
+                    :class="getRolBadgeClass()"
                   >
-                    Admin
+                    {{ getRolText() }}
                   </span>
                 </div>
                 <button
@@ -166,7 +238,6 @@ export default defineComponent({
 
     // Estados computados que se actualizan cuando authUpdateTrigger cambia
     const isAuthenticated = computed(() => {
-      // Esta línea hace que el computed se ejecute cada vez que authUpdateTrigger cambia
       authUpdateTrigger.value;
       const result = authService.isAuthenticated();
       console.log('isAuthenticated evaluado:', result);
@@ -186,6 +257,48 @@ export default defineComponent({
       console.log('isAdmin evaluado:', admin);
       return admin;
     });
+
+    const isInformatica = computed(() => {
+      authUpdateTrigger.value;
+      const informatica = authService.isInformatica();
+      console.log('isInformatica evaluado:', informatica);
+      return informatica;
+    });
+
+    const isPatrimonio = computed(() => {
+      authUpdateTrigger.value;
+      const patrimonio = authService.isPatrimonio();
+      console.log('isPatrimonio evaluado:', patrimonio);
+      return patrimonio;
+    });
+
+    const getRolBadgeClass = () => {
+      const rol = currentUser.value?.rol;
+      switch (rol) {
+        case 'admin':
+          return 'bg-red-500 text-white';
+        case 'informatica':
+          return 'bg-blue-500 text-white';
+        case 'patrimonio':
+          return 'bg-purple-500 text-white';
+        default:
+          return 'bg-gray-500 text-white';
+      }
+    };
+
+    const getRolText = () => {
+      const rol = currentUser.value?.rol;
+      switch (rol) {
+        case 'admin':
+          return 'Admin';
+        case 'informatica':
+          return 'Informática';
+        case 'patrimonio':
+          return 'Patrimonio';
+        default:
+          return 'Usuario';
+      }
+    };
 
     const handleLogout = () => {
       if (confirm('¿Está seguro que desea cerrar sesión?')) {
@@ -241,7 +354,9 @@ export default defineComponent({
       console.log('App montado. Estado inicial:', {
         isAuthenticated: isAuthenticated.value,
         currentUser: currentUser.value,
-        isAdmin: isAdmin.value
+        isAdmin: isAdmin.value,
+        isInformatica: isInformatica.value,
+        isPatrimonio: isPatrimonio.value
       });
     });
 
@@ -256,9 +371,13 @@ export default defineComponent({
       isAuthenticated,
       currentUser,
       isAdmin,
+      isInformatica,
+      isPatrimonio,
       handleLogout,
       refreshAuthState,
-      onBeforeUnmount
+      onBeforeUnmount,
+      getRolBadgeClass,
+      getRolText
     };
   },
   beforeUnmount() {
