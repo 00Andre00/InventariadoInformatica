@@ -176,6 +176,25 @@
                   >
                     <i class="fas fa-edit"></i>
                   </button>
+
+                  <!-- 🔽 NUEVOS BOTONES AÑADIDOS -->
+                  <button
+                    v-if="isInformatica"
+                    @click="enviarARevision(impresora)"
+                    class="btn-action bg-yellow-600 text-white hover:bg-yellow-700"
+                    title="Enviar a Revisión"
+                  >
+                    <i class="fas fa-tools"></i>
+                  </button>
+
+                  <button
+                    @click="generarReporte(impresora)"
+                    class="btn-action bg-gray-600 text-white hover:bg-gray-700"
+                    title="Generar Reporte"
+                  >
+                    <i class="fas fa-file-pdf"></i>
+                  </button>
+
                   <button
                     @click="confirmarEliminacion(impresora)"
                     class="btn-action bg-red-600 text-white hover:bg-red-700"
@@ -311,6 +330,7 @@ import { defineComponent, ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 import ExcelJS from "exceljs";
+import { useAuth } from "@/composables/useAuth";
 
 import "../interceptors/axios";
 
@@ -337,6 +357,8 @@ export default defineComponent({
   name: "ListaImpresoras",
   setup() {
     const router = useRouter();
+    const { isInformatica } = useAuth();
+
     const impresoras = ref<Impresora[]>([]);
     const busqueda = ref("");
     const paginaActual = ref(1);
@@ -346,14 +368,27 @@ export default defineComponent({
     const impresoraAEliminar = ref<Impresora | null>(null);
     const eliminando = ref(false);
 
-    // Cargar impresoras desde la API
     const cargarImpresoras = async () => {
       loading.value = true;
       error.value = "";
 
       try {
         const response = await axios.get("/impresoras");
-        impresoras.value = response.data.data;
+        // 🔽 CORREGIDO - Mostrar solo impresoras asignadas o sin estado_especial
+        impresoras.value = response.data.data
+          .filter((impresora: any) => {
+            // Mostrar impresoras que están asignadas o no tienen estado_especial
+            return (
+              impresora.estado_especial === "asignado" ||
+              !impresora.estado_especial
+            );
+          })
+          .map((impresora: any) => impresora);
+
+        console.log(
+          "📋 Impresoras cargadas en lista general:",
+          impresoras.value.length
+        );
       } catch (err: any) {
         console.error("Error al cargar impresoras:", err);
         error.value =
@@ -414,6 +449,28 @@ export default defineComponent({
 
     const editarImpresora = (id: number) => {
       router.push(`/impresoras/editar/${id}`);
+    };
+
+    // 🔽 NUEVOS MÉTODOS AÑADIDOS
+    const enviarARevision = async (impresora: Impresora) => {
+      if (!confirm(`¿Enviar la impresora ${impresora.modelo} a revisión?`))
+        return;
+
+      try {
+        await axios.post(`/sistema/impresoras/${impresora.id}/revision`);
+        alert("Impresora enviada a revisión correctamente");
+        cargarImpresoras();
+      } catch (error) {
+        console.error("Error al enviar impresora a revisión:", error);
+        alert("Error al enviar impresora a revisión");
+      }
+    };
+
+    const generarReporte = (impresora: Impresora) => {
+      window.open(
+        `/sistema/reportes/cambio/impresora/${impresora.id}`,
+        "_blank"
+      );
     };
 
     const confirmarEliminacion = (impresora: Impresora) => {
@@ -563,9 +620,12 @@ export default defineComponent({
       impresorasFiltradas,
       impresorasPaginadas,
       totalPaginas,
+      isInformatica,
       cargarImpresoras,
       cambiarPagina,
       editarImpresora,
+      enviarARevision,
+      generarReporte,
       confirmarEliminacion,
       cancelarEliminacion,
       eliminarImpresora,
@@ -577,6 +637,7 @@ export default defineComponent({
 </script>
 
 <style scoped>
+/* Tus estilos existentes se mantienen igual */
 .btn-primary {
   @apply inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
 }
