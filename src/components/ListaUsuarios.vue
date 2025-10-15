@@ -174,6 +174,14 @@
                     <i class="fas fa-print"></i>
                   </button>
                   <button
+                    @click="generarReporteUsuario(usuario)"
+                    class="btn-action bg-gray-600 text-white hover:bg-gray-700"
+                    title="Generar Reporte"
+                  >
+                    <i class="fas fa-file-pdf"></i>
+                  </button>
+
+                  <button
                     @click="confirmarEliminacion(usuario)"
                     class="btn-action bg-red-600 text-white hover:bg-red-700"
                     title="Eliminar"
@@ -655,6 +663,9 @@ export default defineComponent({
         eliminando.value = false;
       }
     };
+    const generarReporteUsuario = (usuario: Usuario) => {
+  window.open(`/sistema/reportes/usuario/${usuario.id}`, "_blank");
+};
 
     const exportarUsuarios = async () => {
       if (usuarios.value.length === 0) {
@@ -794,6 +805,7 @@ export default defineComponent({
       usuariosFiltrados,
       usuariosPaginados,
       totalPaginas,
+      generarReporteUsuario,
       cargarUsuarios,
       cambiarPagina,
       getBadgeContrato,
