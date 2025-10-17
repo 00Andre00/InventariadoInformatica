@@ -368,7 +368,7 @@ export default defineComponent({
           `${
             tipoRecurso.value === "impresora" ? "Impresora" : "Equipo"
           } asignado correctamente\n` +
-            `Estado especial: ${response.data.estado_especial}`
+            `Estado especial: ${response.data.data.estado_especial}` // ← CORREGIDO
         );
 
         cerrarModal();

@@ -347,11 +347,20 @@
                     }}</span>
                   </p>
                 </div>
-                <span
-                  class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800"
-                >
-                  {{ equipo.estado || "Activo" }}
-                </span>
+                <div class="flex items-center gap-2">
+                  <span
+                    class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800"
+                  >
+                    {{ equipo.estado || "Activo" }}
+                  </span>
+                  <button
+                    @click="generarReporteEquipo(equipo)"
+                    class="text-gray-400 hover:text-red-600 transition-colors"
+                    title="Generar Reporte PDF"
+                  >
+                    <i class="fas fa-file-pdf"></i>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -414,12 +423,21 @@
                     }}</span>
                   </p>
                 </div>
-                <span
-                  class="text-xs px-2 py-1 rounded-full"
-                  :class="getEstadoImpresoraClass(impresora.estado)"
-                >
-                  {{ impresora.estado || "Sin estado" }}
-                </span>
+                <div class="flex items-center gap-2">
+                  <span
+                    class="text-xs px-2 py-1 rounded-full"
+                    :class="getEstadoImpresoraClass(impresora.estado)"
+                  >
+                    {{ impresora.estado || "Sin estado" }}
+                  </span>
+                  <button
+                    @click="generarReporteImpresora(impresora)"
+                    class="text-gray-400 hover:text-red-600 transition-colors"
+                    title="Generar Reporte PDF"
+                  >
+                    <i class="fas fa-file-pdf"></i>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -434,6 +452,7 @@ import { defineComponent, ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 import ExcelJS from "exceljs";
+import { ElLoading, ElMessage } from "element-plus"; // ¡IMPORTANTE!
 
 import "../interceptors/axios";
 
@@ -464,15 +483,8 @@ interface Impresora {
   mac?: string;
   oficina?: string;
   codigoPatrimonial?: string;
-  estado: string; // Cambiado a obligatorio ya que la API siempre lo incluye
+  estado: string;
   usuarioId?: number;
-  usuario?: {
-    id: number;
-    dni: string;
-    nombres: string;
-    apellidos: string;
-    tipoContrato: string;
-  };
 }
 
 export default defineComponent({
@@ -559,12 +571,6 @@ export default defineComponent({
       );
     };
 
-    const formatearEstado = (estado: string) => {
-      if (!estado) return "Sin estado";
-      // Mantener el formato original del API (primera letra mayúscula)
-      return estado;
-    };
-
     const getBadgeContrato = (tipoContrato: string) => {
       const tipos: Record<string, string> = {
         Nombrado: "bg-green-100 text-green-800",
@@ -603,16 +609,11 @@ export default defineComponent({
       impresorasUsuario.value = [];
 
       try {
-        // Usar el endpoint general y filtrar por usuarioId
         const response = await axios.get("/impresoras");
-
-        // Filtrar las impresoras que pertenecen al usuario
         const impresorasDelUsuario = response.data.data.filter(
           (impresora: any) => impresora.usuarioId === usuario.id
         );
-
         impresorasUsuario.value = impresorasDelUsuario;
-        console.log("🔍 Impresoras filtradas:", impresorasDelUsuario); // Debug
       } catch (err) {
         console.error("Error al cargar impresoras:", err);
         impresorasUsuario.value = [];
@@ -650,26 +651,126 @@ export default defineComponent({
           (u) => u.id !== usuarioAEliminar.value!.id
         );
         usuarioAEliminar.value = null;
+        ElMessage.success("Usuario eliminado correctamente");
       } catch (err: any) {
         console.error("Error al eliminar usuario:", err);
         if (err.response?.data?.error) {
-          error.value = err.response.data.error;
+          ElMessage.error(err.response.data.error);
         } else {
-          error.value =
-            "Error al eliminar el usuario: " +
-            (err.message || "Error desconocido");
+          ElMessage.error("Error al eliminar el usuario");
         }
       } finally {
         eliminando.value = false;
       }
     };
-    const generarReporteUsuario = (usuario: Usuario) => {
-  window.open(`/sistema/reportes/usuario/${usuario.id}`, "_blank");
-};
+
+    // FUNCIONES DE REPORTES CORREGIDAS
+    const generarReporteUsuario = async (usuario: Usuario) => {
+      try {
+        const loading = ElLoading.service({
+          lock: true,
+          text: "Generando reporte PDF...",
+          background: "rgba(0, 0, 0, 0.7)",
+        });
+
+        const response = await axios.get(
+          `/sistema/reportes/usuario/${usuario.id}`,
+          {
+            responseType: "blob",
+          }
+        );
+
+        const blob = new Blob([response.data], { type: "application/pdf" });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `reporte-usuario-${usuario.dni}-${usuario.apellidos}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        loading.close();
+        ElMessage.success("Reporte generado exitosamente");
+      } catch (error: any) {
+        console.error("Error al generar reporte:", error);
+        ElMessage.error("Error al generar el reporte PDF");
+      }
+    };
+
+    const generarReporteEquipo = async (equipo: Equipo) => {
+      try {
+        const loading = ElLoading.service({
+          lock: true,
+          text: "Generando reporte del equipo...",
+          background: "rgba(0, 0, 0, 0.7)",
+        });
+
+        const response = await axios.get(
+          `/sistema/reportes/cambio/equipo/${equipo.id}`,
+          {
+            responseType: "blob",
+          }
+        );
+
+        const blob = new Blob([response.data], { type: "application/pdf" });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `reporte-equipo-${
+          equipo.codigoPatrimonial || equipo.id
+        }.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        loading.close();
+        ElMessage.success("Reporte del equipo generado exitosamente");
+      } catch (error: any) {
+        console.error("Error al generar reporte del equipo:", error);
+        ElMessage.error("Error al generar el reporte del equipo");
+      }
+    };
+
+    const generarReporteImpresora = async (impresora: Impresora) => {
+      try {
+        const loading = ElLoading.service({
+          lock: true,
+          text: "Generando reporte de la impresora...",
+          background: "rgba(0, 0, 0, 0.7)",
+        });
+
+        const response = await axios.get(
+          `/sistema/reportes/cambio/impresora/${impresora.id}`,
+          {
+            responseType: "blob",
+          }
+        );
+
+        const blob = new Blob([response.data], { type: "application/pdf" });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `reporte-impresora-${
+          impresora.codigoPatrimonial || impresora.id
+        }.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        loading.close();
+        ElMessage.success("Reporte de la impresora generado exitosamente");
+      } catch (error: any) {
+        console.error("Error al generar reporte de impresora:", error);
+        ElMessage.error("Error al generar el reporte de la impresora");
+      }
+    };
 
     const exportarUsuarios = async () => {
       if (usuarios.value.length === 0) {
-        alert("No hay usuarios para exportar");
+        ElMessage.warning("No hay usuarios para exportar");
         return;
       }
 
@@ -677,7 +778,6 @@ export default defineComponent({
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet("Usuarios");
 
-        // Definir columnas
         worksheet.columns = [
           { header: "ID", key: "id", width: 8 },
           { header: "DNI", key: "dni", width: 12 },
@@ -693,16 +793,16 @@ export default defineComponent({
           cell.fill = {
             type: "pattern",
             pattern: "solid",
-            fgColor: { argb: "FF3B82F6" }, // azul-600
+            fgColor: { argb: "FF3B82F6" },
           };
           cell.font = {
             bold: true,
-            color: { argb: "FFFFFFFF" }, // blanco
+            color: { argb: "FFFFFFFF" },
             size: 12,
           };
           cell.alignment = { vertical: "middle", horizontal: "center" };
           cell.border = {
-            top: { style: "thin", color: { argb: "FF1E40AF" } }, // azul-800
+            top: { style: "thin", color: { argb: "FF1E40AF" } },
             bottom: { style: "thin", color: { argb: "FF1E40AF" } },
             left: { style: "thin", color: { argb: "FF1E40AF" } },
             right: { style: "thin", color: { argb: "FF1E40AF" } },
@@ -721,17 +821,15 @@ export default defineComponent({
             createdAt: new Date(usuario.createdAt).toLocaleDateString("es-PE"),
           });
 
-          // Alternar colores de fila
           row.fill = {
             type: "pattern",
             pattern: "solid",
-            fgColor: { argb: index % 2 === 0 ? "FFF3F4F6" : "FFFFFFFF" }, // gris-50 / blanco
+            fgColor: { argb: index % 2 === 0 ? "FFF3F4F6" : "FFFFFFFF" },
           };
 
-          // Alinear celdas
           row.eachCell({ includeEmpty: true }, (cell) => {
             cell.border = {
-              top: { style: "thin", color: { argb: "FFE5E7EB" } }, // gris-200
+              top: { style: "thin", color: { argb: "FFE5E7EB" } },
               bottom: { style: "thin", color: { argb: "FFE5E7EB" } },
               left: { style: "thin", color: { argb: "FFE5E7EB" } },
               right: { style: "thin", color: { argb: "FFE5E7EB" } },
@@ -740,32 +838,11 @@ export default defineComponent({
           });
         });
 
-        // Autoajustar columnas
-        worksheet.columns.forEach((column) => {
-          if (column.values) {
-            let maxLength = 0;
-            column.values.forEach((value: any) => {
-              if (value !== null && value !== undefined) {
-                const length = String(value).length;
-                if (length > maxLength) {
-                  maxLength = length;
-                }
-              }
-            });
-            column.width = Math.min(
-              Math.max(maxLength + 2, column.header?.length || 0),
-              30
-            );
-          }
-        });
-
-        // Generar archivo
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], {
           type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         });
 
-        // Descargar archivo
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
         link.download = `usuarios_${
@@ -775,13 +852,14 @@ export default defineComponent({
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(link.href);
+
+        ElMessage.success("Usuarios exportados exitosamente");
       } catch (err) {
         console.error("Error al exportar usuarios:", err);
-        error.value = "Error al exportar usuarios a Excel";
+        ElMessage.error("Error al exportar usuarios a Excel");
       }
     };
 
-    // Cargar datos al montar el componente
     onMounted(() => {
       cargarUsuarios();
     });
@@ -806,6 +884,8 @@ export default defineComponent({
       usuariosPaginados,
       totalPaginas,
       generarReporteUsuario,
+      generarReporteEquipo,
+      generarReporteImpresora,
       cargarUsuarios,
       cambiarPagina,
       getBadgeContrato,
@@ -819,7 +899,6 @@ export default defineComponent({
       eliminarUsuario,
       exportarUsuarios,
       getEstadoImpresoraClass,
-      formatearEstado,
     };
   },
 });
