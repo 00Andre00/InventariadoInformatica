@@ -269,7 +269,6 @@ export default defineComponent({
       return informatica;
     });
 
-    // Eliminamos isPatrimonio ya que este rol se quita del sistema
 
     const getRolBadgeClass = () => {
       const rol = currentUser.value?.rol;
@@ -278,7 +277,6 @@ export default defineComponent({
           return 'bg-red-500 text-white';
         case 'informatica':
           return 'bg-blue-500 text-white';
-        // Eliminamos el caso 'patrimonio'
         default:
           return 'bg-gray-500 text-white';
       }
@@ -291,7 +289,6 @@ export default defineComponent({
           return 'Admin';
         case 'informatica':
           return 'Informática';
-        // Eliminamos el caso 'patrimonio'
         default:
           return 'Usuario';
       }
