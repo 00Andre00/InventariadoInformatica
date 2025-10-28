@@ -92,7 +92,7 @@ const routes = [
     meta: { requiresAuth: true, requiresInformatica: true },
   },
 
-  // Nuevas rutas del sistema - CORREGIDAS
+  // Nuevas rutas del sistema
   {
     path: "/sistema/usuarios",
     name: "UsuariosSistema",
@@ -103,19 +103,19 @@ const routes = [
     path: "/sistema/revision",
     name: "RevisionEquipos",
     component: RevisionEquipos,
-    meta: { requiresAuth: true, requiresInformatica: true }, // ✅ Informática también
+    meta: { requiresAuth: true, requiresInformatica: true },
   },
   {
     path: "/sistema/disponibles",
     name: "EquiposDisponibles",
     component: EquiposDisponibles,
-    meta: { requiresAuth: true, requiresInformatica: true }, // ✅ Informática también
+    meta: { requiresAuth: true, requiresInformatica: true },
   },
   {
     path: "/sistema/bajas",
     name: "EquiposBajas",
     component: EquiposBajas,
-    meta: { requiresAuth: true, requiresPatrimonio: true },
+    meta: { requiresAuth: true, requiresAdmin: true },
   },
   {
     path: "/sistema/cambiar-password",
@@ -141,7 +141,6 @@ router.beforeEach(async (to, _from, next) => {
   const isAuthenticated = authService.isAuthenticated();
   const isAdmin = authService.isAdmin();
   const isInformatica = authService.isInformatica();
-  const isPatrimonio = authService.isPatrimonio();
 
   // Si la ruta requiere ser invitado (como login) y ya está autenticado
   if (to.meta.requiresGuest && isAuthenticated) {
@@ -169,12 +168,6 @@ router.beforeEach(async (to, _from, next) => {
     // Si la ruta requiere permisos de informática
     if (to.meta.requiresInformatica && !isInformatica) {
       alert("No tienes permisos de informática para acceder a esta página");
-      return next("/");
-    }
-
-    // Si la ruta requiere permisos de patrimonio
-    if (to.meta.requiresPatrimonio && !isPatrimonio) {
-      alert("No tienes permisos de patrimonio para acceder a esta página");
       return next("/");
     }
   }

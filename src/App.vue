@@ -12,8 +12,8 @@
           </router-link>
 
           <!-- Información del usuario y menú para pantallas grandes -->
-          <div class="hidden md:flex items-center space-x-4">
-            <!-- Enlaces de navegación -->
+          <div class="hidden md:flex items-center space-x-2">
+            <!-- Enlaces de navegación comunes para todos -->
             <router-link 
               to="/" 
               class="px-3 py-1 rounded-md hover:bg-gray-700 hover:text-green-400 transition-colors duration-200"
@@ -36,39 +36,40 @@
               <i class="fas fa-print mr-1"></i> Impresoras
             </router-link>
 
-            <!-- Nuevos enlaces para admin -->
-            <router-link 
-              v-if="isAdmin"
-              to="/sistema/usuarios" 
-              class="px-3 py-1 rounded-md hover:bg-gray-700 hover:text-green-400 transition-colors duration-200"
-              active-class="bg-gray-700 text-green-400"
-            >
-              <i class="fas fa-user-cog mr-1"></i> Usuarios Sistema
-            </router-link>
-            <router-link 
-              v-if="isAdmin"
-              to="/sistema/revision" 
-              class="px-3 py-1 rounded-md hover:bg-gray-700 hover:text-green-400 transition-colors duration-200"
-              active-class="bg-gray-700 text-green-400"
-            >
-              <i class="fas fa-tools mr-1"></i> Revisión
-            </router-link>
-            <router-link 
-              v-if="isAdmin"
-              to="/sistema/disponibles" 
-              class="px-3 py-1 rounded-md hover:bg-gray-700 hover:text-green-400 transition-colors duration-200"
-              active-class="bg-gray-700 text-green-400"
-            >
-              <i class="fas fa-check-circle mr-1"></i> Disponibles
-            </router-link>
-            <router-link 
-              v-if="isPatrimonio"
-              to="/sistema/bajas" 
-              class="px-3 py-1 rounded-md hover:bg-gray-700 hover:text-green-400 transition-colors duration-200"
-              active-class="bg-gray-700 text-green-400"
-            >
-              <i class="fas fa-archive mr-1"></i> Bajas
-            </router-link>
+            <!-- Enlaces exclusivos para Admin con diseño mejorado -->
+            <div v-if="isAdmin" class="flex items-center space-x-2">
+              <!-- Separador visual -->
+              <div class="border-l border-gray-600 h-6 mx-1"></div>
+              
+              <router-link 
+                to="/sistema/usuarios" 
+                class="px-3 py-1 rounded-md hover:bg-gray-700 hover:text-blue-400 transition-colors duration-200"
+                active-class="bg-gray-700 text-blue-400"
+              >
+                <i class="fas fa-user-cog mr-1"></i> Usuarios Sistema
+              </router-link>
+              <router-link 
+                to="/sistema/revision" 
+                class="px-3 py-1 rounded-md hover:bg-gray-700 hover:text-yellow-400 transition-colors duration-200"
+                active-class="bg-gray-700 text-yellow-400"
+              >
+                <i class="fas fa-tools mr-1"></i> Revisión
+              </router-link>
+              <router-link 
+                to="/sistema/disponibles" 
+                class="px-3 py-1 rounded-md hover:bg-gray-700 hover:text-green-400 transition-colors duration-200"
+                active-class="bg-gray-700 text-green-400"
+              >
+                <i class="fas fa-check-circle mr-1"></i> Disponibles
+              </router-link>
+              <router-link 
+                to="/sistema/bajas" 
+                class="px-3 py-1 rounded-md hover:bg-gray-700 hover:text-red-400 transition-colors duration-200"
+                active-class="bg-gray-700 text-red-400"
+              >
+                <i class="fas fa-archive mr-1"></i> Bajas
+              </router-link>
+            </div>
 
             <!-- Separador -->
             <div class="border-l border-gray-600 h-6 mx-2"></div>
@@ -111,7 +112,7 @@
           v-show="isMobileMenuOpen"
           class="md:hidden mt-3 space-y-2 pb-2 border-t border-gray-700 pt-2"
         >
-          <!-- Enlaces de navegación móvil -->
+          <!-- Enlaces de navegación móvil comunes -->
           <router-link 
             to="/" 
             class="block px-3 py-2 rounded-md hover:bg-gray-700 hover:text-green-400 transition-colors duration-200"
@@ -137,43 +138,46 @@
             <i class="fas fa-print mr-2"></i> Impresoras
           </router-link>
 
-          <!-- Nuevos enlaces móviles para admin -->
-          <router-link 
-            v-if="isAdmin"
-            to="/sistema/usuarios" 
-            class="block px-3 py-2 rounded-md hover:bg-gray-700 hover:text-green-400 transition-colors duration-200"
-            active-class="bg-gray-700 text-green-400"
-            @click="isMobileMenuOpen = false"
-          >
-            <i class="fas fa-user-cog mr-2"></i> Usuarios Sistema
-          </router-link>
-          <router-link 
-            v-if="isAdmin"
-            to="/sistema/revision" 
-            class="block px-3 py-2 rounded-md hover:bg-gray-700 hover:text-green-400 transition-colors duration-200"
-            active-class="bg-gray-700 text-green-400"
-            @click="isMobileMenuOpen = false"
-          >
-            <i class="fas fa-tools mr-2"></i> Revisión
-          </router-link>
-          <router-link 
-            v-if="isAdmin"
-            to="/sistema/disponibles" 
-            class="block px-3 py-2 rounded-md hover:bg-gray-700 hover:text-green-400 transition-colors duration-200"
-            active-class="bg-gray-700 text-green-400"
-            @click="isMobileMenuOpen = false"
-          >
-            <i class="fas fa-check-circle mr-2"></i> Disponibles
-          </router-link>
-          <router-link 
-            v-if="isPatrimonio"
-            to="/sistema/bajas" 
-            class="block px-3 py-2 rounded-md hover:bg-gray-700 hover:text-green-400 transition-colors duration-200"
-            active-class="bg-gray-700 text-green-400"
-            @click="isMobileMenuOpen = false"
-          >
-            <i class="fas fa-archive mr-2"></i> Bajas
-          </router-link>
+          <!-- Enlaces móviles exclusivos para admin -->
+          <template v-if="isAdmin">
+            <div class="border-t border-gray-600 pt-2 mt-2">
+              <div class="px-2 py-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                Administración
+              </div>
+            </div>
+            <router-link 
+              to="/sistema/usuarios" 
+              class="block px-3 py-2 rounded-md hover:bg-gray-700 hover:text-blue-400 transition-colors duration-200"
+              active-class="bg-gray-700 text-blue-400"
+              @click="isMobileMenuOpen = false"
+            >
+              <i class="fas fa-user-cog mr-2"></i> Usuarios Sistema
+            </router-link>
+            <router-link 
+              to="/sistema/revision" 
+              class="block px-3 py-2 rounded-md hover:bg-gray-700 hover:text-yellow-400 transition-colors duration-200"
+              active-class="bg-gray-700 text-yellow-400"
+              @click="isMobileMenuOpen = false"
+            >
+              <i class="fas fa-tools mr-2"></i> Revisión
+            </router-link>
+            <router-link 
+              to="/sistema/disponibles" 
+              class="block px-3 py-2 rounded-md hover:bg-gray-700 hover:text-green-400 transition-colors duration-200"
+              active-class="bg-gray-700 text-green-400"
+              @click="isMobileMenuOpen = false"
+            >
+              <i class="fas fa-check-circle mr-2"></i> Disponibles
+            </router-link>
+            <router-link 
+              to="/sistema/bajas" 
+              class="block px-3 py-2 rounded-md hover:bg-gray-700 hover:text-red-400 transition-colors duration-200"
+              active-class="bg-gray-700 text-red-400"
+              @click="isMobileMenuOpen = false"
+            >
+              <i class="fas fa-archive mr-2"></i> Bajas
+            </router-link>
+          </template>
 
           <!-- Información del usuario en móvil -->
           <div class="border-t border-gray-700 pt-2 mt-2">
@@ -265,12 +269,7 @@ export default defineComponent({
       return informatica;
     });
 
-    const isPatrimonio = computed(() => {
-      authUpdateTrigger.value;
-      const patrimonio = authService.isPatrimonio();
-      console.log('isPatrimonio evaluado:', patrimonio);
-      return patrimonio;
-    });
+    // Eliminamos isPatrimonio ya que este rol se quita del sistema
 
     const getRolBadgeClass = () => {
       const rol = currentUser.value?.rol;
@@ -279,8 +278,7 @@ export default defineComponent({
           return 'bg-red-500 text-white';
         case 'informatica':
           return 'bg-blue-500 text-white';
-        case 'patrimonio':
-          return 'bg-purple-500 text-white';
+        // Eliminamos el caso 'patrimonio'
         default:
           return 'bg-gray-500 text-white';
       }
@@ -293,8 +291,7 @@ export default defineComponent({
           return 'Admin';
         case 'informatica':
           return 'Informática';
-        case 'patrimonio':
-          return 'Patrimonio';
+        // Eliminamos el caso 'patrimonio'
         default:
           return 'Usuario';
       }
@@ -355,8 +352,7 @@ export default defineComponent({
         isAuthenticated: isAuthenticated.value,
         currentUser: currentUser.value,
         isAdmin: isAdmin.value,
-        isInformatica: isInformatica.value,
-        isPatrimonio: isPatrimonio.value
+        isInformatica: isInformatica.value
       });
     });
 
@@ -372,7 +368,6 @@ export default defineComponent({
       currentUser,
       isAdmin,
       isInformatica,
-      isPatrimonio,
       handleLogout,
       refreshAuthState,
       onBeforeUnmount,
@@ -385,21 +380,3 @@ export default defineComponent({
   }
 });
 </script>
-
-<style>
-/* Transiciones suaves para el router */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
-/* Estilos para los enlaces activos */
-.router-link-active {
-  font-weight: 500;
-}
-</style>

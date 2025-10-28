@@ -84,12 +84,6 @@ class AuthService {
     return user?.rol === 'informatica' || user?.rol === 'admin';
   }
 
-  // Verificar si es patrimonio
-  isPatrimonio(): boolean {
-    const user = this.getUser();
-    return user?.rol === 'patrimonio';
-  }
-
   // Obtener rol del usuario
   getRol(): string {
     const user = this.getUser();

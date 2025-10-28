@@ -7,7 +7,6 @@ export function useAuth() {
   const currentUser = computed(() => authService.getUser());
   const isAdmin = computed(() => authService.isAdmin());
   const isInformatica = computed(() => authService.isInformatica());
-  const isPatrimonio = computed(() => authService.isPatrimonio());
   const userRol = computed(() => authService.getRol());
 
   return {
@@ -15,7 +14,6 @@ export function useAuth() {
     currentUser,
     isAdmin,
     isInformatica,
-    isPatrimonio,
     userRol
   };
 }
