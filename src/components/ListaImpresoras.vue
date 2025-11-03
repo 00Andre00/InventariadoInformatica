@@ -83,7 +83,7 @@
               <th
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
-                Modelo
+                Marca/Modelo
               </th>
               <th
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -135,7 +135,14 @@
                 #{{ impresora.id }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm">
-                <div class="font-medium">{{ impresora.modelo }}</div>
+                <div class="font-medium">{{ impresora.marca }}</div>
+                <div class="text-gray-500">{{ impresora.modelo }}</div>
+                <div
+                  v-if="impresora.codigoPatrimonial"
+                  class="text-xs text-gray-400"
+                >
+                  Pat: {{ impresora.codigoPatrimonial }}
+                </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm">
                 <div class="font-mono">{{ impresora.ip || "-" }}</div>
@@ -177,7 +184,6 @@
                     <i class="fas fa-edit"></i>
                   </button>
 
-                  <!-- 🔽 NUEVOS BOTONES AÑADIDOS -->
                   <button
                     v-if="isInformatica"
                     @click="enviarARevision(impresora)"
@@ -331,6 +337,7 @@ import { useRouter } from "vue-router";
 import axios from "axios";
 import ExcelJS from "exceljs";
 import { useAuth } from "@/composables/useAuth";
+import { ElLoading, ElMessage } from "element-plus";
 
 import "../interceptors/axios";
 
@@ -344,13 +351,18 @@ interface Usuario {
 interface Impresora {
   id: number;
   modelo: string;
+  marca: string;
+  serie?: string;
   ip: string;
   mac: string;
   oficina: string;
   codigoPatrimonial: string;
+  tipo?: string;
+  conexion?: string;
   usuarioId?: number;
   usuario?: Usuario;
   estado?: string;
+  estado_especial?: string;
 }
 
 export default defineComponent({
@@ -368,36 +380,33 @@ export default defineComponent({
     const impresoraAEliminar = ref<Impresora | null>(null);
     const eliminando = ref(false);
 
-    const cargarImpresoras = async () => {
-      loading.value = true;
-      error.value = "";
+// En ListaImpresoras.vue, cambia el método cargarImpresoras:
+const cargarImpresoras = async () => {
+  loading.value = true;
+  error.value = "";
 
-      try {
-        const response = await axios.get("/impresoras");
-        // 🔽 CORREGIDO - Mostrar solo impresoras asignadas o sin estado_especial
-        impresoras.value = response.data.data
-          .filter((impresora: any) => {
-            // Mostrar impresoras que están asignadas o no tienen estado_especial
-            return (
-              impresora.estado_especial === "asignado" ||
-              !impresora.estado_especial
-            );
-          })
-          .map((impresora: any) => impresora);
+  try {
+    const response = await axios.get("/impresoras");
+    // ✅ SOLO MOSTRAR IMPRESORAS ASIGNADAS
+    impresoras.value = response.data.data
+      .filter((impresora: any) => impresora.estado_especial === 'asignado')
+      .map((impresora: any) => ({
+        ...impresora,
+        marca: impresora.marca || "",
+        serie: impresora.serie || "",
+        tipo: impresora.tipo || "",
+        conexion: impresora.conexion || "",
+        estado_especial: impresora.estado_especial || ""
+      }));
 
-        console.log(
-          "📋 Impresoras cargadas en lista general:",
-          impresoras.value.length
-        );
-      } catch (err: any) {
-        console.error("Error al cargar impresoras:", err);
-        error.value =
-          "No se pudieron cargar las impresoras. " +
-          (err.response?.data?.message || err.message || "Error desconocido");
-      } finally {
-        loading.value = false;
-      }
-    };
+    console.log("📋 Impresoras asignadas cargadas:", impresoras.value.length);
+  } catch (err: any) {
+    console.error("Error al cargar impresoras:", err);
+    error.value = "No se pudieron cargar las impresoras. " + (err.response?.data?.message || err.message || "Error desconocido");
+  } finally {
+    loading.value = false;
+  }
+};
 
     // Computed properties
     const impresorasFiltradas = computed(() => {
@@ -406,10 +415,14 @@ export default defineComponent({
       return impresoras.value.filter(
         (impresora) =>
           impresora.modelo?.toLowerCase().includes(termino) ||
+          impresora.marca?.toLowerCase().includes(termino) ||
+          impresora.serie?.toLowerCase().includes(termino) ||
           impresora.ip?.toLowerCase().includes(termino) ||
           impresora.mac?.toLowerCase().includes(termino) ||
           impresora.oficina?.toLowerCase().includes(termino) ||
           impresora.codigoPatrimonial?.toLowerCase().includes(termino) ||
+          impresora.tipo?.toLowerCase().includes(termino) ||
+          impresora.conexion?.toLowerCase().includes(termino) ||
           (impresora.usuario?.nombres + " " + impresora.usuario?.apellidos)
             ?.toLowerCase()
             .includes(termino) ||
@@ -434,11 +447,16 @@ export default defineComponent({
         inactivo: "bg-gray-100 text-gray-800",
         mantenimiento: "bg-yellow-100 text-yellow-800",
         baja: "bg-red-100 text-red-800",
+        bueno: "bg-green-100 text-green-800",
+        regular: "bg-yellow-100 text-yellow-800", 
+        malo: "bg-red-100 text-red-800",
       };
       return (
         estados[estado?.toLowerCase() || ""] || "bg-gray-100 text-gray-800"
       );
     };
+
+    
 
     const cambiarPagina = (pagina: number) => {
       if (pagina >= 1 && pagina <= totalPaginas.value) {
@@ -451,28 +469,63 @@ export default defineComponent({
       router.push(`/impresoras/editar/${id}`);
     };
 
-    // 🔽 NUEVOS MÉTODOS AÑADIDOS
     const enviarARevision = async (impresora: Impresora) => {
       if (!confirm(`¿Enviar la impresora ${impresora.modelo} a revisión?`))
         return;
 
       try {
         await axios.post(`/sistema/impresoras/${impresora.id}/revision`);
-        alert("Impresora enviada a revisión correctamente");
+        ElMessage.success("Impresora enviada a revisión correctamente");
         cargarImpresoras();
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error al enviar impresora a revisión:", error);
-        alert("Error al enviar impresora a revisión");
+        ElMessage.error("Error al enviar impresora a revisión");
       }
     };
 
-    const generarReporte = (impresora: Impresora) => {
-      window.open(
-        `/sistema/reportes/cambio/impresora/${impresora.id}`,
-        "_blank"
-      );
-    };
+const generarReporte = async (impresora: Impresora) => {
+  let loadingInstance: any = null; // ✅ Declarar la instancia fuera del try
+  
+  try {
+    loadingInstance = ElLoading.service({
+      lock: true,
+      text: "Generando reporte PDF...",
+      background: "rgba(0, 0, 0, 0.7)",
+    });
 
+    // ✅ USAR LA RUTA CORRECTA que tienes en el backend
+    const response = await axios.get(
+      `/sistema/reportes/cambio/impresora/${impresora.id}`,
+      {
+        responseType: "blob",
+      }
+    );
+
+    const blob = new Blob([response.data], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `reporte-impresora-${impresora.codigoPatrimonial || impresora.id}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    // ✅ Cerrar loading correctamente
+    if (loadingInstance) {
+      loadingInstance.close();
+    }
+    ElMessage.success("Reporte generado exitosamente");
+  } catch (error: any) {
+    console.error("Error al generar reporte:", error);
+    
+    // ✅ Cerrar loading en caso de error también
+    if (loadingInstance) {
+      loadingInstance.close();
+    }
+    ElMessage.error("Error al generar el reporte PDF");
+  }
+};
     const confirmarEliminacion = (impresora: Impresora) => {
       impresoraAEliminar.value = impresora;
     };
@@ -492,11 +545,13 @@ export default defineComponent({
           (i) => i.id !== impresoraAEliminar.value!.id
         );
         impresoraAEliminar.value = null;
+        ElMessage.success("Impresora eliminada correctamente");
       } catch (err: any) {
         console.error("Error al eliminar impresora:", err);
-        error.value =
+        ElMessage.error(
           "Error al eliminar la impresora: " +
-          (err.response?.data?.message || err.message || "Error desconocido");
+          (err.response?.data?.message || err.message || "Error desconocido")
+        );
       } finally {
         eliminando.value = false;
       }
@@ -504,23 +559,34 @@ export default defineComponent({
 
     const exportarImpresoras = async () => {
       if (impresoras.value.length === 0) {
-        alert("No hay impresoras para exportar");
+        ElMessage.warning("No hay impresoras para exportar");
         return;
       }
 
       try {
+        const loading = ElLoading.service({
+          lock: true,
+          text: "Generando archivo Excel...",
+          background: "rgba(0, 0, 0, 0.7)",
+        });
+
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet("Impresoras");
 
-        // Columnas
+        // Columnas mejoradas
         worksheet.columns = [
           { header: "ID", key: "id", width: 10 },
+          { header: "Marca", key: "marca", width: 20 },
           { header: "Modelo", key: "modelo", width: 25 },
+          { header: "Serie", key: "serie", width: 20 },
           { header: "IP", key: "ip", width: 15 },
           { header: "MAC", key: "mac", width: 20 },
           { header: "Oficina", key: "oficina", width: 20 },
           { header: "Código Patrimonial", key: "codigoPatrimonial", width: 20 },
+          { header: "Tipo", key: "tipo", width: 15 },
+          { header: "Conexión", key: "conexion", width: 15 },
           { header: "Estado", key: "estado", width: 15 },
+          { header: "Estado Especial", key: "estado_especial", width: 15 },
           { header: "Usuario", key: "usuario", width: 30 },
           { header: "DNI Usuario", key: "dniUsuario", width: 15 },
         ];
@@ -545,12 +611,17 @@ export default defineComponent({
         impresoras.value.forEach((impresora, index) => {
           const row = worksheet.addRow({
             id: impresora.id,
+            marca: impresora.marca || "-",
             modelo: impresora.modelo,
+            serie: impresora.serie || "-",
             ip: impresora.ip || "-",
             mac: impresora.mac || "-",
             oficina: impresora.oficina,
             codigoPatrimonial: impresora.codigoPatrimonial || "-",
+            tipo: impresora.tipo || "-",
+            conexion: impresora.conexion || "-",
             estado: impresora.estado || "-",
+            estado_especial: impresora.estado_especial || "-",
             usuario: impresora.usuario
               ? `${impresora.usuario.nombres} ${impresora.usuario.apellidos}`
               : "Sin asignar",
@@ -597,9 +668,12 @@ export default defineComponent({
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(link.href);
+
+        loading.close();
+        ElMessage.success("Archivo Excel generado exitosamente");
       } catch (err) {
         console.error("Error al exportar impresoras:", err);
-        error.value = "Error al exportar impresoras a Excel";
+        ElMessage.error("Error al exportar impresoras a Excel");
       }
     };
 
@@ -637,7 +711,7 @@ export default defineComponent({
 </script>
 
 <style scoped>
-/* Tus estilos existentes se mantienen igual */
+/* Tus estilos se mantienen igual */
 .btn-primary {
   @apply inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
 }
