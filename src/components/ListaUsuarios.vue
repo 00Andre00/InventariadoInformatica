@@ -18,13 +18,11 @@
       </div>
     </div>
 
-    <!-- Estado de carga -->
     <div v-if="loading" class="text-center py-8 bg-gray-50 rounded-lg">
       <i class="fas fa-circle-notch fa-spin text-blue-500 text-2xl mb-2"></i>
       <p class="text-gray-600">Cargando usuarios...</p>
     </div>
 
-    <!-- Mensaje de error -->
     <div
       v-else-if="error"
       class="bg-red-50 border-l-4 border-red-500 p-4 rounded mb-4"
@@ -41,7 +39,6 @@
       </button>
     </div>
 
-    <!-- Sin usuarios -->
     <div
       v-else-if="usuarios.length === 0"
       class="text-center py-8 bg-gray-50 rounded-lg"
@@ -56,9 +53,7 @@
       </router-link>
     </div>
 
-    <!-- Tabla de usuarios -->
     <div v-else class="bg-white rounded-lg shadow overflow-hidden">
-      <!-- Barra de búsqueda -->
       <div class="p-4 border-b bg-gray-50">
         <div class="relative max-w-md">
           <input
@@ -71,7 +66,6 @@
         </div>
       </div>
 
-      <!-- Tabla responsive -->
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
@@ -195,7 +189,6 @@
         </table>
       </div>
 
-      <!-- Paginación -->
       <div
         class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-3"
       >
@@ -251,7 +244,6 @@
       </div>
     </div>
 
-    <!-- Modal de confirmación -->
     <div
       v-if="usuarioAEliminar"
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
@@ -293,72 +285,100 @@
       </div>
     </div>
 
-    <!-- Modal de equipos del usuario -->
     <div
       v-if="mostrarModalEquipos"
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
     >
       <div
-        class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+        class="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto"
       >
         <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg font-semibold">
-            <i class="fas fa-laptop mr-2 text-blue-500"></i>
-            Equipos asignados a {{ usuarioSeleccionado?.nombres }}
-            {{ usuarioSeleccionado?.apellidos }}
-          </h3>
+          <div>
+            <h3 class="text-lg font-semibold">
+              <i class="fas fa-laptop mr-2 text-blue-500"></i>
+              Equipos asignados a {{ usuarioSeleccionado?.nombres }}
+              {{ usuarioSeleccionado?.apellidos }}
+            </h3>
+            <p class="text-sm text-gray-500">
+              DNI: {{ usuarioSeleccionado?.dni }} • Oficina: {{ usuarioSeleccionado?.oficina }}
+            </p>
+          </div>
           <button
             @click="cerrarModalEquipos"
-            class="text-gray-500 hover:text-gray-700"
+            class="text-gray-500 hover:text-gray-700 text-xl"
           >
             <i class="fas fa-times"></i>
           </button>
         </div>
 
-        <div v-if="cargandoEquipos" class="text-center py-4">
-          <i class="fas fa-circle-notch fa-spin text-blue-500 text-xl"></i>
-          <p class="text-gray-600 mt-2">Cargando equipos...</p>
+        <div v-if="cargandoEquipos" class="text-center py-8">
+          <i class="fas fa-circle-notch fa-spin text-blue-500 text-2xl mb-2"></i>
+          <p class="text-gray-600">Cargando equipos...</p>
         </div>
 
         <div v-else>
           <div
             v-if="equiposUsuario.length === 0"
-            class="text-center py-4 text-gray-500"
+            class="text-center py-8 text-gray-500"
           >
-            <i class="fas fa-laptop text-2xl mb-2"></i>
-            <p>No hay equipos asignados a este usuario</p>
+            <i class="fas fa-laptop text-4xl mb-3 text-gray-300"></i>
+            <p class="text-lg mb-2">No hay equipos asignados</p>
+            <p class="text-sm">Este usuario no tiene equipos de computo asignados actualmente.</p>
           </div>
 
-          <div v-else class="space-y-4">
+          <div v-else class="space-y-3">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-sm text-gray-500">
+                Total: {{ equiposUsuario.length }} equipo(s)
+              </span>
+            </div>
+            
             <div
               v-for="equipo in equiposUsuario"
               :key="equipo.id"
-              class="border rounded-lg p-4 hover:shadow-md transition-shadow"
+              class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-200 bg-white"
             >
               <div class="flex justify-between items-start">
-                <div>
-                  <h4 class="font-medium">
-                    {{ equipo.tipo }} {{ equipo.marca }} {{ equipo.modelo }}
-                  </h4>
-                  <p class="text-sm text-gray-500 mt-1">
-                    <span class="font-mono">{{ equipo.ip }}</span> •
-                    <span class="font-medium">{{
-                      equipo.codigoPatrimonial
-                    }}</span>
-                  </p>
+                <div class="flex-1">
+                  <div class="flex items-center gap-3 mb-2">
+                    <h4 class="font-semibold text-gray-800">
+                      {{ equipo.tipo }} {{ equipo.marca }} {{ equipo.modelo }}
+                    </h4>
+                    <span
+                      class="text-xs px-2 py-1 rounded-full font-medium"
+                      :class="getEstadoEquipoClass(equipo.estado)"
+                    >
+                      {{ equipo.estado || 'Activo' }}
+                    </span>
+                  </div>
+                  
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
+                    <div class="flex items-center gap-2">
+                      <i class="fas fa-hashtag text-gray-400"></i>
+                      <span class="font-mono">{{ equipo.codigoPatrimonial || 'Sin código' }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <i class="fas fa-network-wired text-gray-400"></i>
+                      <span class="font-mono">{{ equipo.ip }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <i class="fas fa-microchip text-gray-400"></i>
+                      <span>{{ equipo.procesador || 'N/A' }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <i class="fas fa-memory text-gray-400"></i>
+                      <span>{{ equipo.ram || 'N/A' }}</span>
+                    </div>
+                  </div>
                 </div>
-                <div class="flex items-center gap-2">
-                  <span
-                    class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800"
-                  >
-                    {{ equipo.estado || "Activo" }}
-                  </span>
+                
+                <div class="flex flex-col items-end gap-2 ml-4">
                   <button
                     @click="generarReporteEquipo(equipo)"
-                    class="text-gray-400 hover:text-red-600 transition-colors"
+                    class="text-red-500 hover:text-red-700 transition-colors p-2 rounded-full hover:bg-red-50"
                     title="Generar Reporte PDF"
                   >
-                    <i class="fas fa-file-pdf"></i>
+                    <i class="fas fa-file-pdf text-lg"></i>
                   </button>
                 </div>
               </div>
@@ -368,74 +388,100 @@
       </div>
     </div>
 
-    <!-- Modal de impresoras del usuario - Versión corregida -->
     <div
       v-if="mostrarModalImpresoras"
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
     >
       <div
-        class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+        class="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto"
       >
         <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg font-semibold">
-            <i class="fas fa-print mr-2 text-purple-500"></i>
-            Impresoras asignadas a {{ usuarioSeleccionado?.nombres }}
-            {{ usuarioSeleccionado?.apellidos }}
-          </h3>
+          <div>
+            <h3 class="text-lg font-semibold">
+              <i class="fas fa-print mr-2 text-purple-500"></i>
+              Impresoras asignadas a {{ usuarioSeleccionado?.nombres }}
+              {{ usuarioSeleccionado?.apellidos }}
+            </h3>
+            <p class="text-sm text-gray-500">
+              DNI: {{ usuarioSeleccionado?.dni }} • Oficina: {{ usuarioSeleccionado?.oficina }}
+            </p>
+          </div>
           <button
             @click="cerrarModalImpresoras"
-            class="text-gray-500 hover:text-gray-700"
+            class="text-gray-500 hover:text-gray-700 text-xl"
           >
             <i class="fas fa-times"></i>
           </button>
         </div>
 
-        <div v-if="cargandoImpresoras" class="text-center py-4">
-          <i class="fas fa-circle-notch fa-spin text-purple-500 text-xl"></i>
-          <p class="text-gray-600 mt-2">Cargando impresoras...</p>
+        <div v-if="cargandoImpresoras" class="text-center py-8">
+          <i class="fas fa-circle-notch fa-spin text-purple-500 text-2xl mb-2"></i>
+          <p class="text-gray-600">Cargando impresoras...</p>
         </div>
 
         <div v-else>
           <div
             v-if="impresorasUsuario.length === 0"
-            class="text-center py-4 text-gray-500"
+            class="text-center py-8 text-gray-500"
           >
-            <i class="fas fa-print text-2xl mb-2"></i>
-            <p>No hay impresoras asignadas a este usuario</p>
+            <i class="fas fa-print text-4xl mb-3 text-gray-300"></i>
+            <p class="text-lg mb-2">No hay impresoras asignadas</p>
+            <p class="text-sm">Este usuario no tiene impresoras asignadas actualmente.</p>
           </div>
 
-          <div v-else class="space-y-4">
+          <div v-else class="space-y-3">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-sm text-gray-500">
+                Total: {{ impresorasUsuario.length }} impresora(s)
+              </span>
+            </div>
+
             <div
               v-for="impresora in impresorasUsuario"
               :key="impresora.id"
-              class="border rounded-lg p-4 hover:shadow-md transition-shadow"
+              class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-200 bg-white"
             >
               <div class="flex justify-between items-start">
-                <div>
-                  <h4 class="font-medium">{{ impresora.modelo }}</h4>
-                  <p class="text-sm text-gray-500 mt-1">
-                    <span class="font-mono">{{
-                      impresora.ip || "Sin IP"
-                    }}</span>
-                    •
-                    <span class="font-medium">{{
-                      impresora.codigoPatrimonial || "Sin código"
-                    }}</span>
-                  </p>
+                <div class="flex-1">
+                  <div class="flex items-center gap-3 mb-2">
+                    <h4 class="font-semibold text-gray-800">
+                      {{ impresora.modelo }}
+                    </h4>
+                    <span
+                      class="text-xs px-2 py-1 rounded-full font-medium"
+                      :class="getEstadoImpresoraClass(impresora.estado)"
+                    >
+                      {{ impresora.estado || 'Activa' }}
+                    </span>
+                  </div>
+                  
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
+                    <div class="flex items-center gap-2">
+                      <i class="fas fa-hashtag text-gray-400"></i>
+                      <span class="font-mono">{{ impresora.codigoPatrimonial || 'Sin código' }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <i class="fas fa-network-wired text-gray-400"></i>
+                      <span class="font-mono">{{ impresora.ip || 'Sin IP' }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <i class="fas fa-building text-gray-400"></i>
+                      <span>{{ impresora.oficina || 'Sin oficina' }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <i class="fas fa-fingerprint text-gray-400"></i>
+                      <span class="font-mono text-xs">{{ impresora.mac || 'Sin MAC' }}</span>
+                    </div>
+                  </div>
                 </div>
-                <div class="flex items-center gap-2">
-                  <span
-                    class="text-xs px-2 py-1 rounded-full"
-                    :class="getEstadoImpresoraClass(impresora.estado)"
-                  >
-                    {{ impresora.estado || "Sin estado" }}
-                  </span>
+                
+                <div class="flex flex-col items-end gap-2 ml-4">
                   <button
                     @click="generarReporteImpresora(impresora)"
-                    class="text-gray-400 hover:text-red-600 transition-colors"
+                    class="text-red-500 hover:text-red-700 transition-colors p-2 rounded-full hover:bg-red-50"
                     title="Generar Reporte PDF"
                   >
-                    <i class="fas fa-file-pdf"></i>
+                    <i class="fas fa-file-pdf text-lg"></i>
                   </button>
                 </div>
               </div>
@@ -452,7 +498,8 @@ import { defineComponent, ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 import ExcelJS from "exceljs";
-import { ElLoading, ElMessage } from "element-plus"; // ¡IMPORTANTE!
+import { ElMessage } from "element-plus";
+import { useLoading } from "@/composables/useLoading"; // AÑADE ESTA IMPORTACIÓN
 
 import "../interceptors/axios";
 
@@ -471,9 +518,18 @@ interface Equipo {
   tipo: string;
   marca: string;
   modelo: string;
+  procesador?: string;
+  ram?: string;
+  almacenamiento?: string;
   ip: string;
+  mac?: string;
   codigoPatrimonial: string;
+  so?: string;
+  officeVersion?: string;
+  antivirus?: string;
   estado: string;
+  oficina?: string;
+  usuarioId?: number;
 }
 
 interface Impresora {
@@ -507,7 +563,6 @@ export default defineComponent({
     const mostrarModalEquipos = ref(false);
     const mostrarModalImpresoras = ref(false);
 
-    // Cargar usuarios desde la API
     const cargarUsuarios = async () => {
       loading.value = true;
       error.value = "";
@@ -525,7 +580,6 @@ export default defineComponent({
       }
     };
 
-    // Computed properties
     const usuariosFiltrados = computed(() => {
       if (!busqueda.value.trim()) return usuarios.value;
       const termino = busqueda.value.toLowerCase().trim();
@@ -548,12 +602,25 @@ export default defineComponent({
       Math.ceil(usuariosFiltrados.value.length / itemsPorPagina)
     );
 
-    // Métodos
     const cambiarPagina = (pagina: number) => {
       if (pagina >= 1 && pagina <= totalPaginas.value) {
         paginaActual.value = pagina;
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
+    };
+
+    const getEstadoEquipoClass = (estado?: string) => {
+      const estados: Record<string, string> = {
+        bueno: "bg-green-100 text-green-800",
+        regular: "bg-yellow-100 text-yellow-800",
+        malo: "bg-red-100 text-red-800",
+        activo: "bg-green-100 text-green-800",
+        inactivo: "bg-gray-100 text-gray-800",
+        mantenimiento: "bg-yellow-100 text-yellow-800",
+        revision: "bg-orange-100 text-orange-800",
+        baja: "bg-red-100 text-red-800",
+      };
+      return estados[estado?.toLowerCase() || ""] || "bg-gray-100 text-gray-800";
     };
 
     const getEstadoImpresoraClass = (estado?: string) => {
@@ -566,9 +633,7 @@ export default defineComponent({
         mantenimiento: "bg-yellow-100 text-yellow-800",
         baja: "bg-red-100 text-red-800",
       };
-      return (
-        estados[estado?.toLowerCase() || ""] || "bg-gray-100 text-gray-800"
-      );
+      return estados[estado?.toLowerCase() || ""] || "bg-gray-100 text-gray-800";
     };
 
     const getBadgeContrato = (tipoContrato: string) => {
@@ -581,10 +646,7 @@ export default defineComponent({
       return tipos[tipoContrato] || "bg-gray-100 text-gray-800";
     };
 
-    const editarUsuario = (id: number) => {
-      router.push(`/usuarios/editar/${id}`);
-    };
-
+    // FUNCIONES PRINCIPALES CORREGIDAS
     const verEquipos = async (usuario: Usuario) => {
       usuarioSeleccionado.value = usuario;
       mostrarModalEquipos.value = true;
@@ -592,10 +654,21 @@ export default defineComponent({
       equiposUsuario.value = [];
 
       try {
-        const response = await axios.get(`/usuarios/${usuario.id}/equipos`);
-        equiposUsuario.value = response.data.data;
-      } catch (err) {
+        // Obtener TODOS los equipos y filtrar por usuarioId
+        const response = await axios.get("/equipos");
+        const todosLosEquipos = response.data.data || [];
+        
+        // Filtrar equipos que pertenecen a este usuario
+        equiposUsuario.value = todosLosEquipos.filter(
+          (equipo: any) => equipo.usuarioId === usuario.id
+        );
+        
+        if (equiposUsuario.value.length === 0) {
+          ElMessage.info(`${usuario.nombres} no tiene equipos asignados`);
+        }
+      } catch (err: any) {
         console.error("Error al cargar equipos:", err);
+        ElMessage.error("Error al cargar los equipos del usuario");
         equiposUsuario.value = [];
       } finally {
         cargandoEquipos.value = false;
@@ -609,13 +682,21 @@ export default defineComponent({
       impresorasUsuario.value = [];
 
       try {
+        // Obtener TODAS las impresoras y filtrar por usuarioId
         const response = await axios.get("/impresoras");
-        const impresorasDelUsuario = response.data.data.filter(
+        const todasLasImpresoras = response.data.data || [];
+        
+        // Filtrar impresoras que pertenecen a este usuario
+        impresorasUsuario.value = todasLasImpresoras.filter(
           (impresora: any) => impresora.usuarioId === usuario.id
         );
-        impresorasUsuario.value = impresorasDelUsuario;
-      } catch (err) {
+        
+        if (impresorasUsuario.value.length === 0) {
+          ElMessage.info(`${usuario.nombres} no tiene impresoras asignadas`);
+        }
+      } catch (err: any) {
         console.error("Error al cargar impresoras:", err);
+        ElMessage.error("Error al cargar las impresoras del usuario");
         impresorasUsuario.value = [];
       } finally {
         cargandoImpresoras.value = false;
@@ -630,6 +711,10 @@ export default defineComponent({
     const cerrarModalImpresoras = () => {
       mostrarModalImpresoras.value = false;
       usuarioSeleccionado.value = null;
+    };
+
+    const editarUsuario = (id: number) => {
+      router.push(`/usuarios/editar/${id}`);
     };
 
     const confirmarEliminacion = (usuario: Usuario) => {
@@ -664,109 +749,157 @@ export default defineComponent({
       }
     };
 
-    // FUNCIONES DE REPORTES CORREGIDAS
-    const generarReporteUsuario = async (usuario: Usuario) => {
-      try {
-        const loading = ElLoading.service({
-          lock: true,
-          text: "Generando reporte PDF...",
-          background: "rgba(0, 0, 0, 0.7)",
-        });
+  // FUNCIONES DE REPORTES CORREGIDAS - USANDO COMPOSABLE
+const generarReporteUsuario = async (usuario: Usuario) => {
+  const { startLoading, stopLoading } = useLoading()
+  
+  try {
+    startLoading({ text: "Generando reporte PDF..." })
 
-        const response = await axios.get(
-          `/sistema/reportes/usuario/${usuario.id}`,
-          {
-            responseType: "blob",
-          }
-        );
-
-        const blob = new Blob([response.data], { type: "application/pdf" });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `reporte-usuario-${usuario.dni}-${usuario.apellidos}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-
-        loading.close();
-        ElMessage.success("Reporte generado exitosamente");
-      } catch (error: any) {
-        console.error("Error al generar reporte:", error);
-        ElMessage.error("Error al generar el reporte PDF");
+    // Endpoint corregido
+    const response = await axios.get(
+      `/sistema/reportes/usuario/${usuario.id}`,
+      {
+        responseType: "blob",
       }
-    };
+    )
 
-    const generarReporteEquipo = async (equipo: Equipo) => {
-      try {
-        const loading = ElLoading.service({
-          lock: true,
-          text: "Generando reporte del equipo...",
-          background: "rgba(0, 0, 0, 0.7)",
-        });
+    const blob = new Blob([response.data], { type: "application/pdf" })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `reporte-usuario-${usuario.dni}-${usuario.apellidos}.pdf`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
 
-        const response = await axios.get(
-          `/sistema/reportes/cambio/equipo/${equipo.id}`,
-          {
-            responseType: "blob",
-          }
-        );
+    ElMessage.success("Reporte generado exitosamente")
+  } catch (error: any) {
+    console.error("Error al generar reporte:", error)
+    ElMessage.error("Error al generar el reporte PDF")
+  } finally {
+    stopLoading()
+  }
+}
 
-        const blob = new Blob([response.data], { type: "application/pdf" });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `reporte-equipo-${
-          equipo.codigoPatrimonial || equipo.id
-        }.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
+const generarReporteEquipo = async (equipo: Equipo) => {
+  const { startLoading, stopLoading } = useLoading()
+  
+  try {
+    startLoading({ text: "Generando reporte del equipo..." })
 
-        loading.close();
-        ElMessage.success("Reporte del equipo generado exitosamente");
-      } catch (error: any) {
-        console.error("Error al generar reporte del equipo:", error);
-        ElMessage.error("Error al generar el reporte del equipo");
+    // Endpoint corregido - usar el mismo formato que para usuario
+    const response = await axios.get(
+      `/sistema/reportes/equipo/${equipo.id}`,
+      {
+        responseType: "blob",
       }
-    };
+    )
 
-    const generarReporteImpresora = async (impresora: Impresora) => {
-      try {
-        const loading = ElLoading.service({
-          lock: true,
-          text: "Generando reporte de la impresora...",
-          background: "rgba(0, 0, 0, 0.7)",
-        });
+    const blob = new Blob([response.data], { type: "application/pdf" })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `reporte-equipo-${
+      equipo.codigoPatrimonial || equipo.id
+    }.pdf`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
 
-        const response = await axios.get(
-          `/sistema/reportes/cambio/impresora/${impresora.id}`,
-          {
-            responseType: "blob",
-          }
-        );
+    ElMessage.success("Reporte del equipo generado exitosamente")
+  } catch (error: any) {
+    console.error("Error al generar reporte del equipo:", error)
+    // Si falla, intentar con el endpoint alternativo
+    try {
+      const response = await axios.get(
+        `/sistema/reportes/cambio/equipo/${equipo.id}`,
+        {
+          responseType: "blob",
+        }
+      )
 
-        const blob = new Blob([response.data], { type: "application/pdf" });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `reporte-impresora-${
-          impresora.codigoPatrimonial || impresora.id
-        }.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
+      const blob = new Blob([response.data], { type: "application/pdf" })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = `reporte-equipo-${
+        equipo.codigoPatrimonial || equipo.id
+      }.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
 
-        loading.close();
-        ElMessage.success("Reporte de la impresora generado exitosamente");
-      } catch (error: any) {
-        console.error("Error al generar reporte de impresora:", error);
-        ElMessage.error("Error al generar el reporte de la impresora");
+      ElMessage.success("Reporte del equipo generado exitosamente")
+    } catch (secondError: any) {
+      ElMessage.error("Error al generar el reporte del equipo")
+    }
+  } finally {
+    stopLoading()
+  }
+}
+
+const generarReporteImpresora = async (impresora: Impresora) => {
+  const { startLoading, stopLoading } = useLoading()
+  
+  try {
+    startLoading({ text: "Generando reporte de la impresora..." })
+
+    // Endpoint corregido - usar el mismo formato que para usuario
+    const response = await axios.get(
+      `/sistema/reportes/impresora/${impresora.id}`,
+      {
+        responseType: "blob",
       }
-    };
+    )
+
+    const blob = new Blob([response.data], { type: "application/pdf" })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `reporte-impresora-${
+      impresora.codigoPatrimonial || impresora.id
+    }.pdf`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+
+    ElMessage.success("Reporte de la impresora generado exitosamente")
+  } catch (error: any) {
+    console.error("Error al generar reporte de impresora:", error)
+    // Si falla, intentar con el endpoint alternativo
+    try {
+      const response = await axios.get(
+        `/sistema/reportes/cambio/impresora/${impresora.id}`,
+        {
+          responseType: "blob",
+        }
+      )
+
+      const blob = new Blob([response.data], { type: "application/pdf" })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = `reporte-impresora-${
+        impresora.codigoPatrimonial || impresora.id
+      }.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+
+      ElMessage.success("Reporte de la impresora generado exitosamente")
+    } catch (secondError: any) {
+      ElMessage.error("Error al generar el reporte de la impresora")
+    }
+  } finally {
+    stopLoading()
+  }
+}
 
     const exportarUsuarios = async () => {
       if (usuarios.value.length === 0) {
@@ -788,7 +921,6 @@ export default defineComponent({
           { header: "Fecha Registro", key: "createdAt", width: 15 },
         ];
 
-        // Estilo para las cabeceras
         worksheet.getRow(1).eachCell((cell) => {
           cell.fill = {
             type: "pattern",
@@ -809,7 +941,6 @@ export default defineComponent({
           };
         });
 
-        // Añadir datos
         usuarios.value.forEach((usuario, index) => {
           const row = worksheet.addRow({
             id: usuario.id,
@@ -883,22 +1014,23 @@ export default defineComponent({
       usuariosFiltrados,
       usuariosPaginados,
       totalPaginas,
-      generarReporteUsuario,
-      generarReporteEquipo,
-      generarReporteImpresora,
-      cargarUsuarios,
-      cambiarPagina,
+      getEstadoEquipoClass,
+      getEstadoImpresoraClass,
       getBadgeContrato,
-      editarUsuario,
       verEquipos,
       verImpresoras,
+      editarUsuario,
+      cambiarPagina,
       cerrarModalEquipos,
       cerrarModalImpresoras,
       confirmarEliminacion,
       cancelarEliminacion,
       eliminarUsuario,
+      generarReporteUsuario,
+      generarReporteEquipo,
+      generarReporteImpresora,
+      cargarUsuarios,
       exportarUsuarios,
-      getEstadoImpresoraClass,
     };
   },
 });
