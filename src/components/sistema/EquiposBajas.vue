@@ -1,6 +1,8 @@
 <template>
   <div class="container mx-auto p-4">
-    <h1 class="text-2xl font-bold text-gray-800 mb-6">Recursos Dados de Baja</h1>
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+      <h1 class="text-2xl font-bold text-gray-800">Recursos Dados de Baja</h1>
+    </div>
 
     <!-- Pestañas para equipos e impresoras -->
     <div class="mb-6">
@@ -14,7 +16,8 @@
             }"
             class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
           >
-            Equipos ({{ equiposBaja.length }})
+            <i class="fas fa-laptop mr-2"></i>
+            Equipos ({{ equiposFiltrados.length }})
           </button>
           <button
             @click="tabActiva = 'impresoras'"
@@ -24,7 +27,8 @@
             }"
             class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
           >
-            Impresoras ({{ impresorasBaja.length }})
+            <i class="fas fa-print mr-2"></i>
+            Impresoras ({{ impresorasFiltradas.length }})
           </button>
         </nav>
       </div>
@@ -36,161 +40,184 @@
       <p class="text-gray-600">Cargando recursos de baja...</p>
     </div>
 
-    <!-- Tabla de equipos de baja -->
+    <!-- Tabla de Equipos de Baja -->
     <div v-else-if="tabActiva === 'equipos'" class="bg-white rounded-lg shadow overflow-hidden">
+      <!-- Buscador -->
+      <div class="p-4 border-b bg-gray-50">
+        <div class="relative max-w-md">
+          <input
+            type="text"
+            v-model="busquedaEquipos"
+            placeholder="Buscar por código, marca, modelo, procesador..."
+            class="input-search"
+          />
+          <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+        </div>
+      </div>
+
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                ID
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                Tipo
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                Marca/Modelo
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Código Patrimonial
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Tipo
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Marca / Modelo
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Especificaciones
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Fecha de Baja
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Acciones
               </th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="equipo in equiposBaja" :key="equipo.id" class="hover:bg-gray-50">
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
-                {{ equipo.id }}
+            <tr v-if="equiposFiltrados.length === 0">
+              <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                <i class="fas fa-search text-gray-300 text-2xl mb-2"></i>
+                <p>No hay equipos dados de baja</p>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
-                <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">
-                  {{ equipo.tipo }}
-                </span>
+            </tr>
+            <tr
+              v-for="equipo in equiposFiltrados"
+              :key="equipo.id"
+              class="hover:bg-gray-50 transition-colors"
+            >
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-mono font-medium">
+                {{ equipo.codigoPatrimonial || 'N/A' }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
-                <div class="font-medium">{{ equipo.marca }}</div>
-                <div class="text-gray-500">{{ equipo.modelo }}</div>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                {{ equipo.tipo }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-mono">
-                {{ equipo.codigoPatrimonial || "N/A" }}
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">{{ equipo.marca }}</div>
+                <div class="text-sm text-gray-500">{{ equipo.modelo }}</div>
               </td>
-              <td class="px-6 py-4 text-sm">
-                <div>{{ equipo.procesador }}</div>
-                <div class="text-gray-500">
-                  {{ equipo.ram }} / {{ equipo.almacenamiento }}
-                </div>
+              <td class="px-6 py-4 text-sm text-gray-600">
+                <div><strong>Procesador:</strong> {{ equipo.procesador || 'N/A' }}</div>
+                <div><strong>RAM:</strong> {{ equipo.ram || 'N/A' }}</div>
+                <div><strong>Almacenamiento:</strong> {{ equipo.almacenamiento || 'N/A' }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {{ obtenerFechaBaja(equipo.id, 'equipo') }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
-                <button
-                  @click="generarReporte(equipo.id, 'equipo')"
-                  class="bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700 transition"
-                  title="Generar Reporte PDF"
-                >
-                  <i class="fas fa-file-pdf mr-1"></i> PDF
-                </button>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                <div class="flex justify-center space-x-2">
+                  <!-- SOLO REPORTE PDF -->
+                  <button
+                    @click="generarReporteEquipo(equipo)"
+                    class="btn-action bg-gray-600 text-white hover:bg-gray-700"
+                    title="Generar Reporte PDF"
+                  >
+                    <i class="fas fa-file-pdf"></i>
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-
-      <div v-if="equiposBaja.length === 0" class="text-center py-8 bg-gray-50">
-        <i class="fas fa-archive text-gray-400 text-4xl mb-4"></i>
-        <p class="text-gray-600">No hay equipos dados de baja</p>
-      </div>
     </div>
 
-    <!-- Tabla de impresoras de baja -->
+    <!-- Tabla de Impresoras de Baja -->
     <div v-else-if="tabActiva === 'impresoras'" class="bg-white rounded-lg shadow overflow-hidden">
+      <!-- Buscador -->
+      <div class="p-4 border-b bg-gray-50">
+        <div class="relative max-w-md">
+          <input
+            type="text"
+            v-model="busquedaImpresoras"
+            placeholder="Buscar por código, modelo, IP, oficina..."
+            class="input-search"
+          />
+          <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+        </div>
+      </div>
+
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                ID
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                Modelo
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                IP/MAC
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Código Patrimonial
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Modelo
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                IP / MAC
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Oficina
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Fecha de Baja
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Acciones
               </th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="impresora in impresorasBaja" :key="impresora.id" class="hover:bg-gray-50">
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
-                {{ impresora.id }}
+            <tr v-if="impresorasFiltradas.length === 0">
+              <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                <i class="fas fa-search text-gray-300 text-2xl mb-2"></i>
+                <p>No hay impresoras dadas de baja</p>
+              </td>
+            </tr>
+            <tr
+              v-for="impresora in impresorasFiltradas"
+              :key="impresora.id"
+              class="hover:bg-gray-50 transition-colors"
+            >
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-mono font-medium">
+                {{ impresora.codigoPatrimonial || 'N/A' }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                {{ impresora.modelo }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm">
-                <div class="font-medium">{{ impresora.modelo }}</div>
-                <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">
-                  Impresora
-                </span>
+                <div class="font-mono">{{ impresora.ip || 'N/A' }}</div>
+                <div class="text-xs font-mono text-gray-500">{{ impresora.mac || 'N/A' }}</div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
-                <div class="font-mono">{{ impresora.ip || "-" }}</div>
-                <div class="text-xs font-mono text-gray-500">
-                  {{ impresora.mac || "-" }}
-                </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-mono">
-                {{ impresora.codigoPatrimonial || "N/A" }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                 {{ impresora.oficina }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {{ obtenerFechaBaja(impresora.id, 'impresora') }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
-                <button
-                  @click="generarReporte(impresora.id, 'impresora')"
-                  class="bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700 transition"
-                  title="Generar Reporte PDF"
-                >
-                  <i class="fas fa-file-pdf mr-1"></i> PDF
-                </button>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                <div class="flex justify-center space-x-2">
+                  <!-- SOLO REPORTE PDF -->
+                  <button
+                    @click="generarReporteImpresora(impresora)"
+                    class="btn-action bg-gray-600 text-white hover:bg-gray-700"
+                    title="Generar Reporte PDF"
+                  >
+                    <i class="fas fa-file-pdf"></i>
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
         </table>
-      </div>
-
-      <div v-if="impresorasBaja.length === 0" class="text-center py-8 bg-gray-50">
-        <i class="fas fa-print text-gray-400 text-4xl mb-4"></i>
-        <p class="text-gray-600">No hay impresoras dadas de baja</p>
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted } from "vue";
+import { defineComponent, ref, onMounted, computed } from "vue";
 import axios from "axios";
+import { ElMessage, ElLoading } from "element-plus";
 
 interface EquipoBaja {
   id: number;
@@ -222,11 +249,37 @@ export default defineComponent({
     const tabActiva = ref<'equipos' | 'impresoras'>('equipos');
     const cargando = ref(false);
     const fechasBajaCache = ref<Record<string, string>>({});
+    const busquedaEquipos = ref('');
+    const busquedaImpresoras = ref('');
+
+    // Computed para equipos filtrados
+    const equiposFiltrados = computed(() => {
+      if (!busquedaEquipos.value.trim()) return equiposBaja.value;
+      const termino = busquedaEquipos.value.toLowerCase().trim();
+      return equiposBaja.value.filter(equipo =>
+        equipo.codigoPatrimonial?.toLowerCase().includes(termino) ||
+        equipo.marca?.toLowerCase().includes(termino) ||
+        equipo.modelo?.toLowerCase().includes(termino) ||
+        equipo.tipo?.toLowerCase().includes(termino) ||
+        equipo.procesador?.toLowerCase().includes(termino)
+      );
+    });
+
+    // Computed para impresoras filtradas
+    const impresorasFiltradas = computed(() => {
+      if (!busquedaImpresoras.value.trim()) return impresorasBaja.value;
+      const termino = busquedaImpresoras.value.toLowerCase().trim();
+      return impresorasBaja.value.filter(impresora =>
+        impresora.codigoPatrimonial?.toLowerCase().includes(termino) ||
+        impresora.modelo?.toLowerCase().includes(termino) ||
+        impresora.ip?.toLowerCase().includes(termino) ||
+        impresora.oficina?.toLowerCase().includes(termino)
+      );
+    });
 
     const cargarRecursosBaja = async () => {
       cargando.value = true;
       try {
-        // Cargar equipos e impresoras en paralelo
         const [equiposResponse, impresorasResponse] = await Promise.all([
           axios.get("/equipos"),
           axios.get("/impresoras")
@@ -255,9 +308,9 @@ export default defineComponent({
           impresoras: impresorasBaja.value.length
         });
 
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error al cargar recursos de baja:", error);
-        alert("Error al cargar recursos dados de baja");
+        ElMessage.error('Error al cargar recursos de baja: ' + (error.response?.data?.error || error.message));
       } finally {
         cargando.value = false;
       }
@@ -303,8 +356,99 @@ export default defineComponent({
       }
     };
 
-    const generarReporte = (id: number, tipo: 'equipo' | 'impresora') => {
-      window.open(`/sistema/reportes/cambio/${tipo}/${id}`, "_blank");
+    // FUNCIONES DE REPORTES PDF
+    const generarReporteEquipo = async (equipo: EquipoBaja) => {
+      let loadingInstance: any = null;
+      
+      try {
+        loadingInstance = ElLoading.service({
+          lock: true,
+          text: "Generando reporte PDF...",
+          background: "rgba(0, 0, 0, 0.7)",
+        });
+
+        // Intentar con endpoint de cambio primero
+        try {
+          const response = await axios.get(
+            `/sistema/reportes/cambio/equipo/${equipo.id}`,
+            { responseType: "blob" }
+          );
+
+          const blob = new Blob([response.data], { type: "application/pdf" });
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = `reporte-baja-equipo-${equipo.codigoPatrimonial || equipo.id}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+
+          ElMessage.success("Reporte del equipo generado exitosamente");
+        } catch (cambioError: any) {
+          // Si falla, intentar con endpoint normal
+          const response = await axios.get(
+            `/sistema/reportes/equipo/${equipo.id}`,
+            { responseType: "blob" }
+          );
+
+          const blob = new Blob([response.data], { type: "application/pdf" });
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = `reporte-baja-equipo-${equipo.codigoPatrimonial || equipo.id}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+
+          ElMessage.success("Reporte del equipo generado exitosamente");
+        }
+
+      } catch (error: any) {
+        console.error("Error al generar reporte del equipo:", error);
+        ElMessage.error("Error al generar el reporte del equipo");
+      } finally {
+        if (loadingInstance) {
+          loadingInstance.close();
+        }
+      }
+    };
+
+    const generarReporteImpresora = async (impresora: ImpresoraBaja) => {
+      let loadingInstance: any = null;
+      
+      try {
+        loadingInstance = ElLoading.service({
+          lock: true,
+          text: "Generando reporte PDF...",
+          background: "rgba(0, 0, 0, 0.7)",
+        });
+
+        const response = await axios.get(
+          `/sistema/reportes/cambio/impresora/${impresora.id}`,
+          { responseType: "blob" }
+        );
+
+        const blob = new Blob([response.data], { type: "application/pdf" });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `reporte-baja-impresora-${impresora.codigoPatrimonial || impresora.id}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        ElMessage.success("Reporte de la impresora generado exitosamente");
+      } catch (error: any) {
+        console.error("Error al generar reporte de impresora:", error);
+        ElMessage.error("Error al generar el reporte de la impresora");
+      } finally {
+        if (loadingInstance) {
+          loadingInstance.close();
+        }
+      }
     };
 
     onMounted(() => {
@@ -316,15 +460,24 @@ export default defineComponent({
       impresorasBaja,
       tabActiva,
       cargando,
+      busquedaEquipos,
+      busquedaImpresoras,
+      equiposFiltrados,
+      impresorasFiltradas,
       obtenerFechaBaja,
-      generarReporte
+      generarReporteEquipo,
+      generarReporteImpresora
     };
   },
 });
 </script>
 
 <style scoped>
-.btn-secondary {
-  @apply bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm transition;
+.btn-action {
+  @apply inline-flex items-center justify-center p-2 rounded-full transition-colors focus:outline-none;
+}
+
+.input-search {
+  @apply pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
 }
 </style>
