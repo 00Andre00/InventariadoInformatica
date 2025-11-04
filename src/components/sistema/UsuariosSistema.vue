@@ -159,7 +159,6 @@
             <select v-model="nuevoUsuario.rol" class="input" required>
               <option value="">Seleccionar rol</option>
               <option value="informatica">Informática</option>
-              <option value="patrimonio">Patrimonio</option>
             </select>
           </div>
 
@@ -316,7 +315,7 @@ export default defineComponent({
       username: "",
       password: "",
       nombre: "",
-      rol: "",
+      rol: "informatica", // Valor por defecto
     });
 
     const cargarUsuarios = async () => {
@@ -349,7 +348,7 @@ export default defineComponent({
           username: "",
           password: "",
           nombre: "",
-          rol: "",
+          rol: "informatica", // Resetear a valor por defecto
         };
       } catch (error: any) {
         console.error("Error al crear usuario:", error);
@@ -443,8 +442,6 @@ export default defineComponent({
           return "bg-red-100 text-red-800";
         case "informatica":
           return "bg-blue-100 text-blue-800";
-        case "patrimonio":
-          return "bg-purple-100 text-purple-800";
         default:
           return "bg-gray-100 text-gray-800";
       }
@@ -456,8 +453,6 @@ export default defineComponent({
           return "Administrador";
         case "informatica":
           return "Informática";
-        case "patrimonio":
-          return "Patrimonio";
         default:
           return rol;
       }
