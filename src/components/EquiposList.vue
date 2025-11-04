@@ -1,22 +1,26 @@
 <template>
   <div class="container mx-auto p-4">
     <!-- Encabezado mejorado -->
-    <div
-      class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4"
-    >
-      <h1 class="text-2xl font-bold text-gray-800">Inventario de Equipos</h1>
-      <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-        <router-link to="/agregar" class="btn-primary">
-          <i class="fas fa-plus mr-2"></i> Agregar Equipo
-        </router-link>
-        <button
-          @click="exportarEquipos"
-          class="btn-success"
-          :disabled="equipos.length === 0"
-        >
-          <i class="fas fa-file-export mr-2"></i> Exportar
-        </button>
-      </div>
+<div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+  <router-link to="/agregar" class="btn-primary">
+    <i class="fas fa-plus mr-2"></i> Agregar Equipo
+  </router-link>
+  <button
+    @click="exportarEquipos"
+    class="btn-success"
+    :disabled="equipos.length === 0"
+  >
+    <i class="fas fa-file-export mr-2"></i> Exportar Excel
+  </button>
+  <!-- NUEVO BOTÓN PARA REPORTE GENERAL -->
+  <button
+    @click="generarReporteGeneral"
+    class="btn-warning"
+    :disabled="equipos.length === 0"
+  >
+    <i class="fas fa-file-pdf mr-2"></i> Reporte General PDF
+  </button>
+</div>
     </div>
 
     <!-- Mensajes de estado -->
@@ -226,7 +230,7 @@
 
                   <!-- 🔽 Tus nuevos botones van aquí -->
                   <button
-                    v-if="isInformatica"
+                    v-if="isAdmin"
                     @click="enviarARevision(equipo)"
                     class="btn-action bg-yellow-600 text-white hover:bg-yellow-700"
                     title="Enviar a Revisión"
@@ -234,13 +238,13 @@
                     <i class="fas fa-tools"></i>
                   </button>
 
-                  <button
-                    @click="generarReporte(equipo)"
-                    class="btn-action bg-gray-600 text-white hover:bg-gray-700"
-                    title="Generar Reporte"
-                  >
-                    <i class="fas fa-file-pdf"></i>
-                  </button>
+                <button
+  @click="generarReporte(equipo)"
+  class="btn-action bg-gray-600 text-white hover:bg-gray-700"
+  title="Generar Reporte"
+>
+  <i class="fas fa-file-pdf"></i>
+</button>
                 </div>
               </td>
             </tr>
@@ -414,13 +418,13 @@
         </div>
       </div>
     </div>
-  </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
+import { ElLoading, ElMessage } from "element-plus";
 import ExcelJS from "exceljs";
 import { useAuth } from "@/composables/useAuth";
 
@@ -481,40 +485,35 @@ export default defineComponent({
     const equipoSeleccionado = ref<Equipo | null>(null);
     const cargandoMantenimientos = ref(false);
 
-    const cargarEquipos = async () => {
-      loading.value = true;
-      error.value = "";
+const cargarEquipos = async () => {
+  loading.value = true;
+  error.value = "";
 
-      try {
-        const response = await axios.get("/equipos");
-        // 🔽 CORREGIDO - Mostrar solo equipos asignados o sin estado_especial
-        equipos.value = response.data.data
-          .filter((equipo: any) => {
-            // Mostrar equipos que están asignados o no tienen estado_especial
-            return (
-              equipo.estado_especial === "asignado" || !equipo.estado_especial
-            );
-          })
-          .map((equipo: any) => ({
-            ...equipo,
-            tieneTeclado: Boolean(equipo.tieneTeclado),
-            tieneMouse: Boolean(equipo.tieneMouse),
-            estadoMonitor: equipo.estadoMonitor || "",
-          }));
+  try {
+    const response = await axios.get("/equipos");
+    // ✅ CORREGIDO - Mostrar solo equipos asignados (no en revisión/baja)
+    equipos.value = response.data.data
+      .filter((equipo: any) => {
+        // Mostrar solo equipos asignados
+        return equipo.estado_especial === "asignado";
+      })
+      .map((equipo: any) => ({
+        ...equipo,
+        tieneTeclado: Boolean(equipo.tieneTeclado),
+        tieneMouse: Boolean(equipo.tieneMouse),
+        estadoMonitor: equipo.estadoMonitor || "",
+      }));
 
-        console.log(
-          "📋 Equipos cargados en lista general:",
-          equipos.value.length
-        );
-      } catch (err: any) {
-        console.error("Error al cargar equipos:", err);
-        error.value =
-          "No se pudieron cargar los equipos. " +
-          (err.response?.data?.message || err.message || "Error desconocido");
-      } finally {
-        loading.value = false;
-      }
-    };
+    console.log("📋 Equipos asignados cargados:", equipos.value.length);
+  } catch (err: any) {
+    console.error("Error al cargar equipos:", err);
+    error.value =
+      "No se pudieron cargar los equipos. " +
+      (err.response?.data?.message || err.message || "Error desconocido");
+  } finally {
+    loading.value = false;
+  }
+};
 
     // Cargar mantenimientos para un equipo específico
     const cargarMantenimientos = async (equipoId: number) => {
@@ -529,7 +528,46 @@ export default defineComponent({
         cargandoMantenimientos.value = false;
       }
     };
+const generarReporteGeneral = async () => {
+  let loadingInstance: any = null;
+  
+  try {
+    loadingInstance = ElLoading.service({
+      lock: true,
+      text: "Generando reporte general de equipos...",
+      background: "rgba(0, 0, 0, 0.7)",
+    });
 
+    const response = await axios.get(
+      `/sistema/reportes/general-equipos`, // ✅ Esta ruta ahora existe
+      {
+        responseType: "blob",
+      }
+    );
+
+    const blob = new Blob([response.data], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `reporte-general-equipos-${new Date().toISOString().split('T')[0]}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    if (loadingInstance) {
+      loadingInstance.close();
+    }
+    ElMessage.success("Reporte general generado exitosamente");
+  } catch (error: any) {
+    console.error("Error al generar reporte general:", error);
+    
+    if (loadingInstance) {
+      loadingInstance.close();
+    }
+    ElMessage.error("Error al generar el reporte general PDF");
+  }
+};
     // Computed properties
     const equiposFiltrados = computed(() => {
       if (!busqueda.value.trim()) return equipos.value;
@@ -586,6 +624,8 @@ export default defineComponent({
       };
       return estados[estado] || "text-gray-600";
     };
+
+    
 
     const formatFecha = (fecha: string) => {
       return new Date(fecha).toLocaleDateString("es-ES", {
@@ -768,7 +808,7 @@ export default defineComponent({
         error.value = "Error al exportar equipos a Excel";
       }
     };
-    const { isInformatica } = useAuth();
+const { isAdmin, isInformatica } = useAuth();
 
     const enviarARevision = async (equipo: Equipo) => {
       if (
@@ -788,9 +828,48 @@ export default defineComponent({
       }
     };
 
-    const generarReporte = (equipo: Equipo) => {
-      window.open(`/sistema/reportes/cambio/equipo/${equipo.id}`, "_blank");
-    };
+const generarReporte = async (equipo: Equipo) => {
+  let loadingInstance: any = null; // ✅ Declarar la instancia
+  
+  try {
+    loadingInstance = ElLoading.service({  // ✅ Usar nombre diferente
+      lock: true,
+      text: "Generando reporte PDF...",
+      background: "rgba(0, 0, 0, 0.7)",
+    });
+
+    const response = await axios.get(
+      `/sistema/reportes/equipo/${equipo.id}`,
+      {
+        responseType: "blob",
+      }
+    );
+
+    const blob = new Blob([response.data], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `reporte-equipo-${equipo.codigoPatrimonial || equipo.id}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    // ✅ Cerrar correctamente
+    if (loadingInstance) {
+      loadingInstance.close();
+    }
+    ElMessage.success("Reporte generado exitosamente");
+  } catch (error: any) {
+    console.error("Error al generar reporte:", error);
+    
+    // ✅ Cerrar también en caso de error
+    if (loadingInstance) {
+      loadingInstance.close();
+    }
+    ElMessage.error("Error al generar el reporte PDF");
+  }
+};
     // Cargar datos al montar el componente
     onMounted(cargarEquipos);
 
@@ -808,7 +887,9 @@ export default defineComponent({
       equiposFiltrados,
       equiposPaginados,
       isInformatica,
+      isAdmin,
       enviarARevision,
+      generarReporteGeneral,
       generarReporte,
       totalPaginas,
       cargarEquipos,
@@ -842,6 +923,10 @@ export default defineComponent({
 
 .btn-cancel {
   @apply px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
+}
+
+.btn-warning {
+  @apply inline-flex items-center justify-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 .btn-confirm {
