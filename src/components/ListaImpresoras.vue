@@ -16,6 +16,14 @@
         >
           <i class="fas fa-file-export mr-2"></i> Exportar
         </button>
+        <!-- NUEVO BOTÓN PARA REPORTE GENERAL -->
+        <button
+          @click="generarReporteGeneralImpresoras"
+          class="btn-warning"
+          :disabled="impresoras.length === 0"
+        >
+          <i class="fas fa-file-pdf mr-2"></i> Reporte General PDF
+        </button>
       </div>
     </div>
 
@@ -185,7 +193,7 @@
                   </button>
 
                   <button
-                    v-if="isInformatica"
+                    v-if="isAdmin"
                     @click="enviarARevision(impresora)"
                     class="btn-action bg-yellow-600 text-white hover:bg-yellow-700"
                     title="Enviar a Revisión"
@@ -337,7 +345,8 @@ import { useRouter } from "vue-router";
 import axios from "axios";
 import ExcelJS from "exceljs";
 import { useAuth } from "@/composables/useAuth";
-import { ElLoading, ElMessage } from "element-plus";
+import { useLoading } from "@/composables/useLoading";
+import { ElMessage } from "element-plus";
 
 import "../interceptors/axios";
 
@@ -369,7 +378,7 @@ export default defineComponent({
   name: "ListaImpresoras",
   setup() {
     const router = useRouter();
-    const { isInformatica } = useAuth();
+    const { isAdmin, isInformatica } = useAuth();
 
     const impresoras = ref<Impresora[]>([]);
     const busqueda = ref("");
@@ -380,33 +389,65 @@ export default defineComponent({
     const impresoraAEliminar = ref<Impresora | null>(null);
     const eliminando = ref(false);
 
-// En ListaImpresoras.vue, cambia el método cargarImpresoras:
-const cargarImpresoras = async () => {
-  loading.value = true;
-  error.value = "";
-
+    // NUEVO MÉTODO PARA REPORTE GENERAL DE IMPRESORAS
+ const generarReporteGeneralImpresoras = async () => {
+  const { startLoading, stopLoading } = useLoading(); // ✅ DENTRO DEL MÉTODO
+  
   try {
-    const response = await axios.get("/impresoras");
-    // ✅ SOLO MOSTRAR IMPRESORAS ASIGNADAS
-    impresoras.value = response.data.data
-      .filter((impresora: any) => impresora.estado_especial === 'asignado')
-      .map((impresora: any) => ({
-        ...impresora,
-        marca: impresora.marca || "",
-        serie: impresora.serie || "",
-        tipo: impresora.tipo || "",
-        conexion: impresora.conexion || "",
-        estado_especial: impresora.estado_especial || ""
-      }));
+    startLoading({ text: "Generando reporte general de impresoras..." });
 
-    console.log("📋 Impresoras asignadas cargadas:", impresoras.value.length);
-  } catch (err: any) {
-    console.error("Error al cargar impresoras:", err);
-    error.value = "No se pudieron cargar las impresoras. " + (err.response?.data?.message || err.message || "Error desconocido");
+    const response = await axios.get(
+      `/sistema/reportes/general-impresoras`,
+      {
+        responseType: "blob",
+      }
+    );
+
+    const blob = new Blob([response.data], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `reporte-general-impresoras-${new Date().toISOString().split('T')[0]}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    ElMessage.success("Reporte general de impresoras generado exitosamente");
+  } catch (error: any) {
+    console.error("Error al generar reporte general de impresoras:", error);
+    ElMessage.error("Error al generar el reporte general de impresoras PDF");
   } finally {
-    loading.value = false;
+    stopLoading(); // ✅ AHORA SÍ ESTÁ DEFINIDO
   }
 };
+
+    const cargarImpresoras = async () => {
+      loading.value = true;
+      error.value = "";
+
+      try {
+        const response = await axios.get("/impresoras");
+        // ✅ SOLO MOSTRAR IMPRESORAS ASIGNADAS
+        impresoras.value = response.data.data
+          .filter((impresora: any) => impresora.estado_especial === 'asignado')
+          .map((impresora: any) => ({
+            ...impresora,
+            marca: impresora.marca || "",
+            serie: impresora.serie || "",
+            tipo: impresora.tipo || "",
+            conexion: impresora.conexion || "",
+            estado_especial: impresora.estado_especial || ""
+          }));
+
+        console.log("📋 Impresoras asignadas cargadas:", impresoras.value.length);
+      } catch (err: any) {
+        console.error("Error al cargar impresoras:", err);
+        error.value = "No se pudieron cargar las impresoras. " + (err.response?.data?.message || err.message || "Error desconocido");
+      } finally {
+        loading.value = false;
+      }
+    };
 
     // Computed properties
     const impresorasFiltradas = computed(() => {
@@ -456,8 +497,6 @@ const cargarImpresoras = async () => {
       );
     };
 
-    
-
     const cambiarPagina = (pagina: number) => {
       if (pagina >= 1 && pagina <= totalPaginas.value) {
         paginaActual.value = pagina;
@@ -483,49 +522,39 @@ const cargarImpresoras = async () => {
       }
     };
 
-const generarReporte = async (impresora: Impresora) => {
-  let loadingInstance: any = null; // ✅ Declarar la instancia fuera del try
-  
-  try {
-    loadingInstance = ElLoading.service({
-      lock: true,
-      text: "Generando reporte PDF...",
-      background: "rgba(0, 0, 0, 0.7)",
-    });
+    const generarReporte = async (impresora: Impresora) => {
+      const { startLoading, stopLoading } = useLoading();
+      
+      try {
+        startLoading({ text: "Generando reporte PDF..." });
 
-    // ✅ USAR LA RUTA CORRECTA que tienes en el backend
-    const response = await axios.get(
-      `/sistema/reportes/cambio/impresora/${impresora.id}`,
-      {
-        responseType: "blob",
+        // ✅ USAR LA RUTA CORRECTA que tienes en el backend
+        const response = await axios.get(
+          `/sistema/reportes/cambio/impresora/${impresora.id}`,
+          {
+            responseType: "blob",
+          }
+        );
+
+        const blob = new Blob([response.data], { type: "application/pdf" });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `reporte-impresora-${impresora.codigoPatrimonial || impresora.id}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        ElMessage.success("Reporte generado exitosamente");
+      } catch (error: any) {
+        console.error("Error al generar reporte:", error);
+        ElMessage.error("Error al generar el reporte PDF");
+      } finally {
+        stopLoading();
       }
-    );
+    };
 
-    const blob = new Blob([response.data], { type: "application/pdf" });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `reporte-impresora-${impresora.codigoPatrimonial || impresora.id}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-
-    // ✅ Cerrar loading correctamente
-    if (loadingInstance) {
-      loadingInstance.close();
-    }
-    ElMessage.success("Reporte generado exitosamente");
-  } catch (error: any) {
-    console.error("Error al generar reporte:", error);
-    
-    // ✅ Cerrar loading en caso de error también
-    if (loadingInstance) {
-      loadingInstance.close();
-    }
-    ElMessage.error("Error al generar el reporte PDF");
-  }
-};
     const confirmarEliminacion = (impresora: Impresora) => {
       impresoraAEliminar.value = impresora;
     };
@@ -557,125 +586,124 @@ const generarReporte = async (impresora: Impresora) => {
       }
     };
 
-    const exportarImpresoras = async () => {
-      if (impresoras.value.length === 0) {
-        ElMessage.warning("No hay impresoras para exportar");
-        return;
-      }
+const exportarImpresoras = async () => {
+  if (impresoras.value.length === 0) {
+    ElMessage.warning("No hay impresoras para exportar");
+    return;
+  }
 
-      try {
-        const loading = ElLoading.service({
-          lock: true,
-          text: "Generando archivo Excel...",
-          background: "rgba(0, 0, 0, 0.7)",
-        });
+  const { startLoading, stopLoading } = useLoading(); // ✅ MOVER DENTRO DEL MÉTODO
 
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet("Impresoras");
+  try {
+    startLoading({ text: "Generando archivo Excel..." });
 
-        // Columnas mejoradas
-        worksheet.columns = [
-          { header: "ID", key: "id", width: 10 },
-          { header: "Marca", key: "marca", width: 20 },
-          { header: "Modelo", key: "modelo", width: 25 },
-          { header: "Serie", key: "serie", width: 20 },
-          { header: "IP", key: "ip", width: 15 },
-          { header: "MAC", key: "mac", width: 20 },
-          { header: "Oficina", key: "oficina", width: 20 },
-          { header: "Código Patrimonial", key: "codigoPatrimonial", width: 20 },
-          { header: "Tipo", key: "tipo", width: 15 },
-          { header: "Conexión", key: "conexion", width: 15 },
-          { header: "Estado", key: "estado", width: 15 },
-          { header: "Estado Especial", key: "estado_especial", width: 15 },
-          { header: "Usuario", key: "usuario", width: 30 },
-          { header: "DNI Usuario", key: "dniUsuario", width: 15 },
-        ];
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Impresoras");
 
-        // Estilo cabeceras
-        worksheet.getRow(1).eachCell((cell) => {
-          cell.fill = {
-            type: "pattern",
-            pattern: "solid",
-            fgColor: { argb: "FF3B82F6" },
-          };
-          cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
-          cell.border = {
-            top: { style: "thin", color: { argb: "FF1E40AF" } },
-            bottom: { style: "thin", color: { argb: "FF1E40AF" } },
-            left: { style: "thin", color: { argb: "FF1E40AF" } },
-            right: { style: "thin", color: { argb: "FF1E40AF" } },
-          };
-        });
+    // Columnas mejoradas
+    worksheet.columns = [
+      { header: "ID", key: "id", width: 10 },
+      { header: "Marca", key: "marca", width: 20 },
+      { header: "Modelo", key: "modelo", width: 25 },
+      { header: "Serie", key: "serie", width: 20 },
+      { header: "IP", key: "ip", width: 15 },
+      { header: "MAC", key: "mac", width: 20 },
+      { header: "Oficina", key: "oficina", width: 20 },
+      { header: "Código Patrimonial", key: "codigoPatrimonial", width: 20 },
+      { header: "Tipo", key: "tipo", width: 15 },
+      { header: "Conexión", key: "conexion", width: 15 },
+      { header: "Estado", key: "estado", width: 15 },
+      { header: "Estado Especial", key: "estado_especial", width: 15 },
+      { header: "Usuario", key: "usuario", width: 30 },
+      { header: "DNI Usuario", key: "dniUsuario", width: 15 },
+    ];
 
-        // Datos
-        impresoras.value.forEach((impresora, index) => {
-          const row = worksheet.addRow({
-            id: impresora.id,
-            marca: impresora.marca || "-",
-            modelo: impresora.modelo,
-            serie: impresora.serie || "-",
-            ip: impresora.ip || "-",
-            mac: impresora.mac || "-",
-            oficina: impresora.oficina,
-            codigoPatrimonial: impresora.codigoPatrimonial || "-",
-            tipo: impresora.tipo || "-",
-            conexion: impresora.conexion || "-",
-            estado: impresora.estado || "-",
-            estado_especial: impresora.estado_especial || "-",
-            usuario: impresora.usuario
-              ? `${impresora.usuario.nombres} ${impresora.usuario.apellidos}`
-              : "Sin asignar",
-            dniUsuario: impresora.usuario?.dni || "-",
-          });
+    // Estilo cabeceras
+    worksheet.getRow(1).eachCell((cell) => {
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF3B82F6" },
+      };
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+      cell.border = {
+        top: { style: "thin", color: { argb: "FF1E40AF" } },
+        bottom: { style: "thin", color: { argb: "FF1E40AF" } },
+        left: { style: "thin", color: { argb: "FF1E40AF" } },
+        right: { style: "thin", color: { argb: "FF1E40AF" } },
+      };
+    });
 
-          // Alternar colores de fila
-          row.fill = {
-            type: "pattern",
-            pattern: "solid",
-            fgColor: { argb: index % 2 === 0 ? "FFF3F4F6" : "FFFFFFFF" },
-          };
-        });
+    // Datos
+    impresoras.value.forEach((impresora, index) => {
+      const row = worksheet.addRow({
+        id: impresora.id,
+        marca: impresora.marca || "-",
+        modelo: impresora.modelo,
+        serie: impresora.serie || "-",
+        ip: impresora.ip || "-",
+        mac: impresora.mac || "-",
+        oficina: impresora.oficina,
+        codigoPatrimonial: impresora.codigoPatrimonial || "-",
+        tipo: impresora.tipo || "-",
+        conexion: impresora.conexion || "-",
+        estado: impresora.estado || "-",
+        estado_especial: impresora.estado_especial || "-",
+        usuario: impresora.usuario
+          ? `${impresora.usuario.nombres} ${impresora.usuario.apellidos}`
+          : "Sin asignar",
+        dniUsuario: impresora.usuario?.dni || "-",
+      });
 
-        // Autoajustar columnas
-        worksheet.columns.forEach((column) => {
-          if (column.values) {
-            let maxLength = 0;
-            column.values.forEach((value: any) => {
-              if (value !== null && value !== undefined) {
-                const length = String(value).length;
-                if (length > maxLength) {
-                  maxLength = length;
-                }
-              }
-            });
-            column.width = Math.min(Math.max(maxLength + 2, 10), 30);
+      // Alternar colores de fila
+      row.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: index % 2 === 0 ? "FFF3F4F6" : "FFFFFFFF" },
+      };
+    });
+
+    // Autoajustar columnas
+    worksheet.columns.forEach((column) => {
+      if (column.values) {
+        let maxLength = 0;
+        column.values.forEach((value: any) => {
+          if (value !== null && value !== undefined) {
+            const length = String(value).length;
+            if (length > maxLength) {
+              maxLength = length;
+            }
           }
         });
-
-        // Generar archivo
-        const buffer = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buffer], {
-          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        });
-
-        // Descargar
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `impresoras_${
-          new Date().toISOString().split("T")[0]
-        }.xlsx`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
-
-        loading.close();
-        ElMessage.success("Archivo Excel generado exitosamente");
-      } catch (err) {
-        console.error("Error al exportar impresoras:", err);
-        ElMessage.error("Error al exportar impresoras a Excel");
+        column.width = Math.min(Math.max(maxLength + 2, 10), 30);
       }
-    };
+    });
+
+    // Generar archivo
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    // Descargar
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `impresoras_${
+      new Date().toISOString().split("T")[0]
+    }.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+
+    ElMessage.success("Archivo Excel generado exitosamente");
+  } catch (err) {
+    console.error("Error al exportar impresoras:", err);
+    ElMessage.error("Error al exportar impresoras a Excel");
+  } finally {
+    stopLoading(); // ✅ AHORA SÍ ESTÁ DEFINIDO
+  }
+};
 
     // Cargar datos al montar el componente
     onMounted(() => {
@@ -695,11 +723,13 @@ const generarReporte = async (impresora: Impresora) => {
       impresorasPaginadas,
       totalPaginas,
       isInformatica,
+      isAdmin,
       cargarImpresoras,
       cambiarPagina,
       editarImpresora,
       enviarARevision,
       generarReporte,
+      generarReporteGeneralImpresoras, // NUEVO MÉTODO EXPORTADO
       confirmarEliminacion,
       cancelarEliminacion,
       eliminarImpresora,
@@ -718,6 +748,10 @@ const generarReporte = async (impresora: Impresora) => {
 
 .btn-success {
   @apply inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-warning {
+  @apply inline-flex items-center justify-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 .btn-action {
