@@ -15,6 +15,13 @@
         >
           <i class="fas fa-file-export mr-2"></i> Exportar
         </button>
+        <button
+          @click="generarReporteGeneralUsuarios"
+          class="btn-warning"
+          :disabled="usuarios.length === 0"
+        >
+          <i class="fas fa-file-pdf mr-2"></i> Reporte General PDF
+        </button>
       </div>
     </div>
 
@@ -373,6 +380,16 @@
                 </div>
                 
                 <div class="flex flex-col items-end gap-2 ml-4">
+                  <!-- NUEVO BOTÓN ENVIAR A REVISIÓN -->
+                  <button
+                    v-if="isAdmin"
+                    @click="enviarEquipoARevision(equipo)"
+                    class="text-yellow-600 hover:text-yellow-800 transition-colors p-2 rounded-full hover:bg-yellow-50"
+                    title="Enviar a Revisión"
+                  >
+                    <i class="fas fa-tools text-lg"></i>
+                  </button>
+                  
                   <button
                     @click="generarReporteEquipo(equipo)"
                     class="text-red-500 hover:text-red-700 transition-colors p-2 rounded-full hover:bg-red-50"
@@ -388,7 +405,7 @@
       </div>
     </div>
 
-    <div
+      <div
       v-if="mostrarModalImpresoras"
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
     >
@@ -476,6 +493,16 @@
                 </div>
                 
                 <div class="flex flex-col items-end gap-2 ml-4">
+                  <!-- NUEVO BOTÓN ENVIAR A REVISIÓN -->
+                  <button
+                    v-if="isAdmin"
+                    @click="enviarImpresoraARevision(impresora)"
+                    class="text-yellow-600 hover:text-yellow-800 transition-colors p-2 rounded-full hover:bg-yellow-50"
+                    title="Enviar a Revisión"
+                  >
+                    <i class="fas fa-tools text-lg"></i>
+                  </button>
+                  
                   <button
                     @click="generarReporteImpresora(impresora)"
                     class="text-red-500 hover:text-red-700 transition-colors p-2 rounded-full hover:bg-red-50"
@@ -499,7 +526,8 @@ import { useRouter } from "vue-router";
 import axios from "axios";
 import ExcelJS from "exceljs";
 import { ElMessage } from "element-plus";
-import { useLoading } from "@/composables/useLoading"; // AÑADE ESTA IMPORTACIÓN
+import { useLoading } from "@/composables/useLoading";
+import { useAuth } from "@/composables/useAuth";
 
 import "../interceptors/axios";
 
@@ -547,6 +575,7 @@ export default defineComponent({
   name: "ListaUsuarios",
   setup() {
     const router = useRouter();
+    const { isAdmin } = useAuth();
     const usuarios = ref<Usuario[]>([]);
     const busqueda = ref("");
     const paginaActual = ref(1);
@@ -562,6 +591,39 @@ export default defineComponent({
     const cargandoImpresoras = ref(false);
     const mostrarModalEquipos = ref(false);
     const mostrarModalImpresoras = ref(false);
+
+    // NUEVO MÉTODO PARA REPORTE GENERAL DE USUARIOS
+    const generarReporteGeneralUsuarios = async () => {
+      const { startLoading, stopLoading } = useLoading();
+      
+      try {
+        startLoading({ text: "Generando reporte general de usuarios..." });
+
+        const response = await axios.get(
+          `/sistema/reportes/general-usuarios`,
+          {
+            responseType: "blob",
+          }
+        );
+
+        const blob = new Blob([response.data], { type: "application/pdf" });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `reporte-general-usuarios-${new Date().toISOString().split('T')[0]}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        ElMessage.success("Reporte general de usuarios generado exitosamente");
+      } catch (error: any) {
+        console.error("Error al generar reporte general de usuarios:", error);
+        ElMessage.error("Error al generar el reporte general de usuarios PDF");
+      } finally {
+        stopLoading();
+      }
+    };
 
     const cargarUsuarios = async () => {
       loading.value = true;
@@ -608,6 +670,69 @@ export default defineComponent({
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
     };
+
+// ✅ NUEVO MÉTODO PARA ENVIAR EQUIPO A REVISIÓN
+    const enviarEquipoARevision = async (equipo: Equipo) => {
+      if (!confirm(`¿Enviar el equipo ${equipo.marca} ${equipo.modelo} a revisión?`)) {
+        return;
+      }
+
+      const { startLoading, stopLoading } = useLoading();
+      
+      try {
+        startLoading({ text: "Enviando equipo a revisión..." });
+
+        await axios.post(`/sistema/equipos/${equipo.id}/revision`);
+        
+        // Actualizar el estado local del equipo
+        const equipoIndex = equiposUsuario.value.findIndex(e => e.id === equipo.id);
+        if (equipoIndex !== -1) {
+          equiposUsuario.value[equipoIndex].estado = 'revision';
+        }
+        
+        ElMessage.success("Equipo enviado a revisión correctamente");
+        
+        // Cerrar el modal después de enviar a revisión
+        cerrarModalEquipos();
+      } catch (error: any) {
+        console.error("Error al enviar equipo a revisión:", error);
+        ElMessage.error("Error al enviar equipo a revisión");
+      } finally {
+        stopLoading();
+      }
+    };
+
+    // ✅ NUEVO MÉTODO PARA ENVIAR IMPRESORA A REVISIÓN
+    const enviarImpresoraARevision = async (impresora: Impresora) => {
+      if (!confirm(`¿Enviar la impresora ${impresora.modelo} a revisión?`)) {
+        return;
+      }
+
+      const { startLoading, stopLoading } = useLoading();
+      
+      try {
+        startLoading({ text: "Enviando impresora a revisión..." });
+
+        await axios.post(`/sistema/impresoras/${impresora.id}/revision`);
+        
+        // Actualizar el estado local de la impresora
+        const impresoraIndex = impresorasUsuario.value.findIndex(i => i.id === impresora.id);
+        if (impresoraIndex !== -1) {
+          impresorasUsuario.value[impresoraIndex].estado = 'revision';
+        }
+        
+        ElMessage.success("Impresora enviada a revisión correctamente");
+        
+        // Cerrar el modal después de enviar a revisión
+        cerrarModalImpresoras();
+      } catch (error: any) {
+        console.error("Error al enviar impresora a revisión:", error);
+        ElMessage.error("Error al enviar impresora a revisión");
+      } finally {
+        stopLoading();
+      }
+    };
+
 
     const getEstadoEquipoClass = (estado?: string) => {
       const estados: Record<string, string> = {
@@ -749,157 +874,157 @@ export default defineComponent({
       }
     };
 
-  // FUNCIONES DE REPORTES CORREGIDAS - USANDO COMPOSABLE
-const generarReporteUsuario = async (usuario: Usuario) => {
-  const { startLoading, stopLoading } = useLoading()
-  
-  try {
-    startLoading({ text: "Generando reporte PDF..." })
+    // FUNCIONES DE REPORTES CORREGIDAS - USANDO COMPOSABLE
+    const generarReporteUsuario = async (usuario: Usuario) => {
+      const { startLoading, stopLoading } = useLoading();
+      
+      try {
+        startLoading({ text: "Generando reporte PDF..." });
 
-    // Endpoint corregido
-    const response = await axios.get(
-      `/sistema/reportes/usuario/${usuario.id}`,
-      {
-        responseType: "blob",
+        // Endpoint corregido
+        const response = await axios.get(
+          `/sistema/reportes/usuario/${usuario.id}`,
+          {
+            responseType: "blob",
+          }
+        );
+
+        const blob = new Blob([response.data], { type: "application/pdf" });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `reporte-usuario-${usuario.dni}-${usuario.apellidos}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        ElMessage.success("Reporte generado exitosamente");
+      } catch (error: any) {
+        console.error("Error al generar reporte:", error);
+        ElMessage.error("Error al generar el reporte PDF");
+      } finally {
+        stopLoading();
       }
-    )
+    };
 
-    const blob = new Blob([response.data], { type: "application/pdf" })
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement("a")
-    link.href = url
-    link.download = `reporte-usuario-${usuario.dni}-${usuario.apellidos}.pdf`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
+    const generarReporteEquipo = async (equipo: Equipo) => {
+      const { startLoading, stopLoading } = useLoading();
+      
+      try {
+        startLoading({ text: "Generando reporte del equipo..." });
 
-    ElMessage.success("Reporte generado exitosamente")
-  } catch (error: any) {
-    console.error("Error al generar reporte:", error)
-    ElMessage.error("Error al generar el reporte PDF")
-  } finally {
-    stopLoading()
-  }
-}
+        // Endpoint corregido - usar el mismo formato que para usuario
+        const response = await axios.get(
+          `/sistema/reportes/equipo/${equipo.id}`,
+          {
+            responseType: "blob",
+          }
+        );
 
-const generarReporteEquipo = async (equipo: Equipo) => {
-  const { startLoading, stopLoading } = useLoading()
-  
-  try {
-    startLoading({ text: "Generando reporte del equipo..." })
+        const blob = new Blob([response.data], { type: "application/pdf" });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `reporte-equipo-${
+          equipo.codigoPatrimonial || equipo.id
+        }.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
 
-    // Endpoint corregido - usar el mismo formato que para usuario
-    const response = await axios.get(
-      `/sistema/reportes/equipo/${equipo.id}`,
-      {
-        responseType: "blob",
-      }
-    )
+        ElMessage.success("Reporte del equipo generado exitosamente");
+      } catch (error: any) {
+        console.error("Error al generar reporte del equipo:", error);
+        // Si falla, intentar con el endpoint alternativo
+        try {
+          const response = await axios.get(
+            `/sistema/reportes/cambio/equipo/${equipo.id}`,
+            {
+              responseType: "blob",
+            }
+          );
 
-    const blob = new Blob([response.data], { type: "application/pdf" })
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement("a")
-    link.href = url
-    link.download = `reporte-equipo-${
-      equipo.codigoPatrimonial || equipo.id
-    }.pdf`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
+          const blob = new Blob([response.data], { type: "application/pdf" });
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = `reporte-equipo-${
+            equipo.codigoPatrimonial || equipo.id
+          }.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
 
-    ElMessage.success("Reporte del equipo generado exitosamente")
-  } catch (error: any) {
-    console.error("Error al generar reporte del equipo:", error)
-    // Si falla, intentar con el endpoint alternativo
-    try {
-      const response = await axios.get(
-        `/sistema/reportes/cambio/equipo/${equipo.id}`,
-        {
-          responseType: "blob",
+          ElMessage.success("Reporte del equipo generado exitosamente");
+        } catch (secondError: any) {
+          ElMessage.error("Error al generar el reporte del equipo");
         }
-      )
-
-      const blob = new Blob([response.data], { type: "application/pdf" })
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement("a")
-      link.href = url
-      link.download = `reporte-equipo-${
-        equipo.codigoPatrimonial || equipo.id
-      }.pdf`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(url)
-
-      ElMessage.success("Reporte del equipo generado exitosamente")
-    } catch (secondError: any) {
-      ElMessage.error("Error al generar el reporte del equipo")
-    }
-  } finally {
-    stopLoading()
-  }
-}
-
-const generarReporteImpresora = async (impresora: Impresora) => {
-  const { startLoading, stopLoading } = useLoading()
-  
-  try {
-    startLoading({ text: "Generando reporte de la impresora..." })
-
-    // Endpoint corregido - usar el mismo formato que para usuario
-    const response = await axios.get(
-      `/sistema/reportes/impresora/${impresora.id}`,
-      {
-        responseType: "blob",
+      } finally {
+        stopLoading();
       }
-    )
+    };
 
-    const blob = new Blob([response.data], { type: "application/pdf" })
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement("a")
-    link.href = url
-    link.download = `reporte-impresora-${
-      impresora.codigoPatrimonial || impresora.id
-    }.pdf`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
+    const generarReporteImpresora = async (impresora: Impresora) => {
+      const { startLoading, stopLoading } = useLoading();
+      
+      try {
+        startLoading({ text: "Generando reporte de la impresora..." });
 
-    ElMessage.success("Reporte de la impresora generado exitosamente")
-  } catch (error: any) {
-    console.error("Error al generar reporte de impresora:", error)
-    // Si falla, intentar con el endpoint alternativo
-    try {
-      const response = await axios.get(
-        `/sistema/reportes/cambio/impresora/${impresora.id}`,
-        {
-          responseType: "blob",
+        // Endpoint corregido - usar el mismo formato que para usuario
+        const response = await axios.get(
+          `/sistema/reportes/impresora/${impresora.id}`,
+          {
+            responseType: "blob",
+          }
+        );
+
+        const blob = new Blob([response.data], { type: "application/pdf" });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `reporte-impresora-${
+          impresora.codigoPatrimonial || impresora.id
+        }.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        ElMessage.success("Reporte de la impresora generado exitosamente");
+      } catch (error: any) {
+        console.error("Error al generar reporte de impresora:", error);
+        // Si falla, intentar con el endpoint alternativo
+        try {
+          const response = await axios.get(
+            `/sistema/reportes/cambio/impresora/${impresora.id}`,
+            {
+              responseType: "blob",
+            }
+          );
+
+          const blob = new Blob([response.data], { type: "application/pdf" });
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = `reporte-impresora-${
+            impresora.codigoPatrimonial || impresora.id
+          }.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+
+          ElMessage.success("Reporte de la impresora generado exitosamente");
+        } catch (secondError: any) {
+          ElMessage.error("Error al generar el reporte de la impresora");
         }
-      )
-
-      const blob = new Blob([response.data], { type: "application/pdf" })
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement("a")
-      link.href = url
-      link.download = `reporte-impresora-${
-        impresora.codigoPatrimonial || impresora.id
-      }.pdf`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(url)
-
-      ElMessage.success("Reporte de la impresora generado exitosamente")
-    } catch (secondError: any) {
-      ElMessage.error("Error al generar el reporte de la impresora")
-    }
-  } finally {
-    stopLoading()
-  }
-}
+      } finally {
+        stopLoading();
+      }
+    };
 
     const exportarUsuarios = async () => {
       if (usuarios.value.length === 0) {
@@ -1012,6 +1137,9 @@ const generarReporteImpresora = async (impresora: Impresora) => {
       mostrarModalEquipos,
       mostrarModalImpresoras,
       usuariosFiltrados,
+      isAdmin,
+      enviarEquipoARevision,
+      enviarImpresoraARevision,
       usuariosPaginados,
       totalPaginas,
       getEstadoEquipoClass,
@@ -1029,6 +1157,7 @@ const generarReporteImpresora = async (impresora: Impresora) => {
       generarReporteUsuario,
       generarReporteEquipo,
       generarReporteImpresora,
+      generarReporteGeneralUsuarios,
       cargarUsuarios,
       exportarUsuarios,
     };
@@ -1043,6 +1172,10 @@ const generarReporteImpresora = async (impresora: Impresora) => {
 
 .btn-success {
   @apply inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-warning {
+  @apply inline-flex items-center justify-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 .btn-action {
