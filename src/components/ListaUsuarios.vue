@@ -8,13 +8,13 @@
         <router-link to="/usuarios/agregar" class="btn-primary">
           <i class="fas fa-plus mr-2"></i> Nuevo Usuario
         </router-link>
-        <button
+        <!-- <button
           @click="exportarUsuarios"
           class="btn-success"
           :disabled="usuarios.length === 0"
         >
           <i class="fas fa-file-export mr-2"></i> Exportar
-        </button>
+        </button> -->
         <button
           @click="generarReporteGeneralUsuarios"
           class="btn-warning"
@@ -524,7 +524,7 @@
 import { defineComponent, ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
-import ExcelJS from "exceljs";
+// import ExcelJS from "exceljs";
 import { ElMessage } from "element-plus";
 import { useLoading } from "@/composables/useLoading";
 import { useAuth } from "@/composables/useAuth";
@@ -1026,95 +1026,95 @@ export default defineComponent({
       }
     };
 
-    const exportarUsuarios = async () => {
-      if (usuarios.value.length === 0) {
-        ElMessage.warning("No hay usuarios para exportar");
-        return;
-      }
+    // const exportarUsuarios = async () => {
+    //   if (usuarios.value.length === 0) {
+    //     ElMessage.warning("No hay usuarios para exportar");
+    //     return;
+    //   }
 
-      try {
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet("Usuarios");
+    //   try {
+    //     const workbook = new ExcelJS.Workbook();
+    //     const worksheet = workbook.addWorksheet("Usuarios");
 
-        worksheet.columns = [
-          { header: "ID", key: "id", width: 8 },
-          { header: "DNI", key: "dni", width: 12 },
-          { header: "Nombres", key: "nombres", width: 25 },
-          { header: "Apellidos", key: "apellidos", width: 25 },
-          { header: "Oficina", key: "oficina", width: 20 },
-          { header: "Tipo Contrato", key: "tipoContrato", width: 15 },
-          { header: "Fecha Registro", key: "createdAt", width: 15 },
-        ];
+    //     worksheet.columns = [
+    //       { header: "ID", key: "id", width: 8 },
+    //       { header: "DNI", key: "dni", width: 12 },
+    //       { header: "Nombres", key: "nombres", width: 25 },
+    //       { header: "Apellidos", key: "apellidos", width: 25 },
+    //       { header: "Oficina", key: "oficina", width: 20 },
+    //       { header: "Tipo Contrato", key: "tipoContrato", width: 15 },
+    //       { header: "Fecha Registro", key: "createdAt", width: 15 },
+    //     ];
 
-        worksheet.getRow(1).eachCell((cell) => {
-          cell.fill = {
-            type: "pattern",
-            pattern: "solid",
-            fgColor: { argb: "FF3B82F6" },
-          };
-          cell.font = {
-            bold: true,
-            color: { argb: "FFFFFFFF" },
-            size: 12,
-          };
-          cell.alignment = { vertical: "middle", horizontal: "center" };
-          cell.border = {
-            top: { style: "thin", color: { argb: "FF1E40AF" } },
-            bottom: { style: "thin", color: { argb: "FF1E40AF" } },
-            left: { style: "thin", color: { argb: "FF1E40AF" } },
-            right: { style: "thin", color: { argb: "FF1E40AF" } },
-          };
-        });
+    //     worksheet.getRow(1).eachCell((cell) => {
+    //       cell.fill = {
+    //         type: "pattern",
+    //         pattern: "solid",
+    //         fgColor: { argb: "FF3B82F6" },
+    //       };
+    //       cell.font = {
+    //         bold: true,
+    //         color: { argb: "FFFFFFFF" },
+    //         size: 12,
+    //       };
+    //       cell.alignment = { vertical: "middle", horizontal: "center" };
+    //       cell.border = {
+    //         top: { style: "thin", color: { argb: "FF1E40AF" } },
+    //         bottom: { style: "thin", color: { argb: "FF1E40AF" } },
+    //         left: { style: "thin", color: { argb: "FF1E40AF" } },
+    //         right: { style: "thin", color: { argb: "FF1E40AF" } },
+    //       };
+    //     });
 
-        usuarios.value.forEach((usuario, index) => {
-          const row = worksheet.addRow({
-            id: usuario.id,
-            dni: usuario.dni,
-            nombres: usuario.nombres,
-            apellidos: usuario.apellidos,
-            oficina: usuario.oficina,
-            tipoContrato: usuario.tipoContrato,
-            createdAt: new Date(usuario.createdAt).toLocaleDateString("es-PE"),
-          });
+    //     usuarios.value.forEach((usuario, index) => {
+    //       const row = worksheet.addRow({
+    //         id: usuario.id,
+    //         dni: usuario.dni,
+    //         nombres: usuario.nombres,
+    //         apellidos: usuario.apellidos,
+    //         oficina: usuario.oficina,
+    //         tipoContrato: usuario.tipoContrato,
+    //         createdAt: new Date(usuario.createdAt).toLocaleDateString("es-PE"),
+    //       });
 
-          row.fill = {
-            type: "pattern",
-            pattern: "solid",
-            fgColor: { argb: index % 2 === 0 ? "FFF3F4F6" : "FFFFFFFF" },
-          };
+    //       row.fill = {
+    //         type: "pattern",
+    //         pattern: "solid",
+    //         fgColor: { argb: index % 2 === 0 ? "FFF3F4F6" : "FFFFFFFF" },
+    //       };
 
-          row.eachCell({ includeEmpty: true }, (cell) => {
-            cell.border = {
-              top: { style: "thin", color: { argb: "FFE5E7EB" } },
-              bottom: { style: "thin", color: { argb: "FFE5E7EB" } },
-              left: { style: "thin", color: { argb: "FFE5E7EB" } },
-              right: { style: "thin", color: { argb: "FFE5E7EB" } },
-            };
-            cell.alignment = { vertical: "middle", horizontal: "left" };
-          });
-        });
+    //       row.eachCell({ includeEmpty: true }, (cell) => {
+    //         cell.border = {
+    //           top: { style: "thin", color: { argb: "FFE5E7EB" } },
+    //           bottom: { style: "thin", color: { argb: "FFE5E7EB" } },
+    //           left: { style: "thin", color: { argb: "FFE5E7EB" } },
+    //           right: { style: "thin", color: { argb: "FFE5E7EB" } },
+    //         };
+    //         cell.alignment = { vertical: "middle", horizontal: "left" };
+    //       });
+    //     });
 
-        const buffer = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buffer], {
-          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        });
+    //     const buffer = await workbook.xlsx.writeBuffer();
+    //     const blob = new Blob([buffer], {
+    //       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    //     });
 
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `usuarios_${
-          new Date().toISOString().split("T")[0]
-        }.xlsx`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
+    //     const link = document.createElement("a");
+    //     link.href = URL.createObjectURL(blob);
+    //     link.download = `usuarios_${
+    //       new Date().toISOString().split("T")[0]
+    //     }.xlsx`;
+    //     document.body.appendChild(link);
+    //     link.click();
+    //     document.body.removeChild(link);
+    //     URL.revokeObjectURL(link.href);
 
-        ElMessage.success("Usuarios exportados exitosamente");
-      } catch (err) {
-        console.error("Error al exportar usuarios:", err);
-        ElMessage.error("Error al exportar usuarios a Excel");
-      }
-    };
+    //     ElMessage.success("Usuarios exportados exitosamente");
+    //   } catch (err) {
+    //     console.error("Error al exportar usuarios:", err);
+    //     ElMessage.error("Error al exportar usuarios a Excel");
+    //   }
+    // };
 
     onMounted(() => {
       cargarUsuarios();
@@ -1159,7 +1159,7 @@ export default defineComponent({
       generarReporteImpresora,
       generarReporteGeneralUsuarios,
       cargarUsuarios,
-      exportarUsuarios,
+      // exportarUsuarios,
     };
   },
 });
