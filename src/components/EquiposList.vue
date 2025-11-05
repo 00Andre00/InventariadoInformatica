@@ -1,26 +1,35 @@
 <template>
   <div class="container mx-auto p-4">
     <!-- Encabezado mejorado -->
-<div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-  <router-link to="/agregar" class="btn-primary">
-    <i class="fas fa-plus mr-2"></i> Agregar Equipo
-  </router-link>
-  <button
-    @click="exportarEquipos"
-    class="btn-success"
-    :disabled="equipos.length === 0"
-  >
-    <i class="fas fa-file-export mr-2"></i> Exportar Excel
-  </button>
-  <!-- NUEVO BOTÓN PARA REPORTE GENERAL -->
-  <button
-    @click="generarReporteGeneral"
-    class="btn-warning"
-    :disabled="equipos.length === 0"
-  >
-    <i class="fas fa-file-pdf mr-2"></i> Reporte General PDF
-  </button>
-</div>
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+      <h1 class="text-2xl font-bold text-gray-800">Inventario de Equipos</h1>
+      <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+        <router-link to="/agregar" class="btn-primary">
+          <i class="fas fa-plus mr-2"></i> Agregar Equipo
+        </router-link>
+        <button
+          @click="exportarEquipos"
+          class="btn-success"
+          :disabled="equipos.length === 0"
+        >
+          <i class="fas fa-file-export mr-2"></i> Exportar Excel
+        </button>
+        <button
+          @click="generarReporteGeneral"
+          class="btn-warning"
+          :disabled="equipos.length === 0"
+        >
+          <i class="fas fa-file-pdf mr-2"></i> Reporte General PDF
+        </button>
+        <!-- NUEVO BOTÓN PARA TRANSFERENCIA EN BLOQUE -->
+        <button
+          @click="abrirModalTransferencia"
+          class="btn-info"
+          :disabled="equipos.length === 0"
+        >
+          <i class="fas fa-exchange-alt mr-2"></i> Transferencia en Bloque
+        </button>
+      </div>
     </div>
 
     <!-- Mensajes de estado -->
@@ -228,7 +237,6 @@
                     <i class="fas fa-tools"></i>
                   </button>
 
-                  <!-- 🔽 Tus nuevos botones van aquí -->
                   <button
                     v-if="isAdmin"
                     @click="enviarARevision(equipo)"
@@ -238,13 +246,13 @@
                     <i class="fas fa-tools"></i>
                   </button>
 
-                <button
-  @click="generarReporte(equipo)"
-  class="btn-action bg-gray-600 text-white hover:bg-gray-700"
-  title="Generar Reporte"
->
-  <i class="fas fa-file-pdf"></i>
-</button>
+                  <button
+                    @click="generarReporte(equipo)"
+                    class="btn-action bg-gray-600 text-white hover:bg-gray-700"
+                    title="Generar Reporte"
+                  >
+                    <i class="fas fa-file-pdf"></i>
+                  </button>
                 </div>
               </td>
             </tr>
@@ -418,6 +426,260 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal de Transferencia en Bloque -->
+    <div
+      v-if="mostrarModalTransferencia"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+    >
+      <div class="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-xl font-semibold">
+            <i class="fas fa-exchange-alt mr-2 text-blue-500"></i>
+            Transferencia Masiva de Equipos
+          </h3>
+          <button
+            @click="cerrarModalTransferencia"
+            class="text-gray-500 hover:text-gray-700"
+          >
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
+
+        <!-- Usuario Origen -->
+        <div class="mb-6 p-4 border rounded-lg bg-gray-50">
+          <h4 class="text-lg font-medium mb-3 text-gray-700">
+            <i class="fas fa-user mr-2 text-blue-500"></i>
+            Usuario Actual (Origen)
+          </h4>
+          <div class="relative">
+           <input
+  v-model="usuarioOrigenBusqueda"
+  @input="buscarUsuariosOrigen"
+  @focus="mostrarListaUsuariosOrigen = true"
+  type="text"
+  class="input-search"
+  placeholder="Buscar por nombre, apellido o DNI..."
+/>
+            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+       <ul
+  v-if="mostrarListaUsuariosOrigen && usuariosEncontradosOrigen.length"
+  class="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
+>
+  <li
+    v-for="usuario in usuariosEncontradosOrigen"
+    :key="'origen-' + usuario.id"
+    @click="seleccionarUsuarioOrigen(usuario)"
+    class="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b last:border-b-0 transition-colors"
+  >
+    <div class="flex justify-between items-start">
+      <div class="flex-1">
+        <div class="font-medium text-gray-900">
+          {{ usuario.nombres }} {{ usuario.apellidos }}
+        </div>
+        <div class="text-sm text-gray-600 mt-1">
+          <span class="inline-block bg-gray-100 px-2 py-1 rounded text-xs mr-2">
+            DNI: {{ usuario.dni }}
+          </span>
+          <span class="inline-block bg-blue-100 px-2 py-1 rounded text-xs">
+            {{ usuario.oficina }}
+          </span>
+        </div>
+        <div class="text-xs text-gray-500 mt-1">
+          Contrato: {{ usuario.tipoContrato }}
+        </div>
+      </div>
+      <i class="fas fa-chevron-right text-gray-400 mt-1 text-sm"></i>
+    </div>
+  </li>
+</ul>
+          </div>
+
+     <!-- PONE esto: -->
+<div v-if="usuarioOrigenSeleccionado" class="mt-4">
+  <h5 class="font-medium text-gray-700 mb-2">
+    Equipos asignados a {{ usuarioOrigenSeleccionado.nombres }} {{ usuarioOrigenSeleccionado.apellidos }}:
+  </h5>
+  <div v-if="equiposOrigenCargando" class="text-center py-4">
+    <i class="fas fa-circle-notch fa-spin text-blue-500 mr-2"></i>
+    Cargando equipos...
+  </div>
+  <div v-else-if="equiposUsuarioOrigen.length === 0" class="text-center py-4 text-gray-500">
+    <i class="fas fa-box-open text-gray-300 text-2xl mb-2"></i>
+    <p>Este usuario no tiene equipos asignados</p>
+  </div>
+  <div v-else class="max-h-60 overflow-y-auto border rounded">
+    <!-- CABECERA DE SELECCIÓN -->
+    <div class="p-3 border-b bg-gray-50 flex items-center justify-between">
+      <div class="flex items-center">
+        <input
+          type="checkbox"
+          v-model="seleccionarTodos"
+          @change="toggleSeleccionarTodos"
+          class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          id="seleccionarTodos"
+        />
+        <label for="seleccionarTodos" class="ml-2 text-sm font-medium text-gray-700">
+          Seleccionar todos
+        </label>
+      </div>
+      <span class="text-sm text-gray-600">
+        {{ equiposSeleccionadosCount }} de {{ equiposUsuarioOrigen.length }} seleccionados
+      </span>
+    </div>
+
+    <!-- LISTA DE EQUIPOS CON CHECKBOX -->
+    <div
+      v-for="equipo in equiposUsuarioOrigen"
+      :key="'origen-equipo-' + equipo.id"
+      class="p-3 border-b hover:bg-blue-50 transition-colors"
+      :class="{ 'bg-blue-50': estaSeleccionado(equipo.id) }"
+    >
+      <div class="flex items-start space-x-3">
+        <input
+          type="checkbox"
+          :value="equipo.id"
+          v-model="equiposSeleccionados"
+          class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1"
+        />
+        <div class="flex-1">
+          <div class="flex justify-between items-start">
+            <div>
+              <span class="font-medium">{{ equipo.marca }} {{ equipo.modelo }}</span>
+              <div class="text-sm text-gray-500">
+                {{ equipo.tipo }} • {{ equipo.codigoPatrimonial || 'Sin código patrimonial' }}
+              </div>
+              <div class="text-xs text-gray-400">
+                IP: {{ equipo.ip }} • Oficina: {{ equipo.oficina }}
+              </div>
+            </div>
+            <i 
+              v-if="estaSeleccionado(equipo.id)" 
+              class="fas fa-check text-green-500 mt-1"
+            ></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="mt-2 text-sm text-gray-600 flex justify-between">
+    <span>Total: {{ equiposUsuarioOrigen.length }} equipo(s)</span>
+    <span class="font-medium text-blue-600">
+      {{ equiposSeleccionadosCount }} seleccionado(s)
+    </span>
+  </div>
+</div>
+        </div>
+
+        <!-- Usuario Destino -->
+        <div class="mb-6 p-4 border rounded-lg bg-green-50">
+          <h4 class="text-lg font-medium mb-3 text-gray-700">
+            <i class="fas fa-user-plus mr-2 text-green-500"></i>
+            Usuario Nuevo (Destino)
+          </h4>
+          <div class="relative">
+          <input
+  v-model="usuarioDestinoBusqueda"
+  @input="buscarUsuariosDestino"
+  @focus="mostrarListaUsuariosDestino = true"
+  type="text"
+  class="input-search"
+  placeholder="Buscar por nombre, apellido o DNI..."
+/>
+            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+            
+         <ul
+  v-if="mostrarListaUsuariosDestino && usuariosEncontradosDestino.length"
+  class="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
+>
+  <li
+    v-for="usuario in usuariosEncontradosDestino"
+    :key="'destino-' + usuario.id"
+    @click="seleccionarUsuarioDestino(usuario)"
+    class="px-4 py-3 hover:bg-green-50 cursor-pointer border-b last:border-b-0 transition-colors"
+  >
+    <div class="flex justify-between items-start">
+      <div class="flex-1">
+        <div class="font-medium text-gray-900">
+          {{ usuario.nombres }} {{ usuario.apellidos }}
+        </div>
+        <div class="text-sm text-gray-600 mt-1">
+          <span class="inline-block bg-gray-100 px-2 py-1 rounded text-xs mr-2">
+            DNI: {{ usuario.dni }}
+          </span>
+          <span class="inline-block bg-green-100 px-2 py-1 rounded text-xs">
+            {{ usuario.oficina }}
+          </span>
+        </div>
+        <div class="text-xs text-gray-500 mt-1">
+          Contrato: {{ usuario.tipoContrato }}
+        </div>
+      </div>
+      <i class="fas fa-chevron-right text-gray-400 mt-1 text-sm"></i>
+    </div>
+  </li>
+</ul>
+          </div>
+
+          <div v-if="usuarioDestinoSeleccionado" class="mt-3 p-3 bg-green-100 rounded">
+            <div class="flex items-center">
+              <i class="fas fa-check-circle text-green-500 mr-2"></i>
+              <span class="font-medium">{{ usuarioDestinoSeleccionado.nombres }} {{ usuarioDestinoSeleccionado.apellidos }}</span>
+            </div>
+            <div class="text-sm text-gray-600 mt-1">
+              DNI: {{ usuarioDestinoSeleccionado.dni }} • Oficina: {{ usuarioDestinoSeleccionado.oficina }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Resumen de Transferencia -->
+  <div v-if="usuarioOrigenSeleccionado && usuarioDestinoSeleccionado" class="mb-6 p-4 border rounded-lg bg-yellow-50">
+  <h4 class="text-lg font-medium mb-3 text-gray-700">
+    <i class="fas fa-sync-alt mr-2 text-yellow-500"></i>
+    Resumen de Transferencia
+  </h4>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+    <div>
+      <strong>Desde:</strong> {{ usuarioOrigenSeleccionado.nombres }} {{ usuarioOrigenSeleccionado.apellidos }}
+    </div>
+    <div>
+      <strong>Hacia:</strong> {{ usuarioDestinoSeleccionado.nombres }} {{ usuarioDestinoSeleccionado.apellidos }}
+    </div>
+    <!-- ✅ CAMBIA equiposUsuarioOrigen.length por equiposSeleccionadosCount -->
+    <div>
+      <strong>Equipos a transferir:</strong> {{ equiposSeleccionadosCount }}
+    </div>
+    <div>
+      <strong>Nueva oficina:</strong> {{ usuarioDestinoSeleccionado.oficina }}
+    </div>
+  </div>
+</div>
+
+        <!-- Botones de acción -->
+        <div class="flex gap-3 justify-end pt-4 border-t">
+          <button
+            @click="cerrarModalTransferencia"
+            class="btn-cancel"
+          >
+            Cancelar
+          </button>
+     <button
+  @click="confirmarTransferencia"
+  :disabled="!puedeTransferir || transferenciaEnProgreso"
+  class="btn-confirm-bulk"
+>
+  <span v-if="transferenciaEnProgreso">
+    <i class="fas fa-circle-notch fa-spin mr-2"></i> Transferiendo...
+  </span>
+  <span v-else>
+    <!-- ✅ CAMBIA equiposUsuarioOrigen.length por equiposSeleccionadosCount -->
+    <i class="fas fa-exchange-alt mr-2"></i> Transferir {{ equiposSeleccionadosCount }} Equipo(s)
+  </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
@@ -435,6 +697,8 @@ interface Usuario {
   dni: string;
   nombres: string;
   apellidos: string;
+  oficina: string;
+  tipoContrato: string;
 }
 
 interface Equipo {
@@ -456,7 +720,7 @@ interface Equipo {
   marcaMonitor: string;
   pulgadasMonitor: string;
   codigoPatrimonialMonitor: string;
-  estadoMonitor: string; // Nuevo campo añadido
+  estadoMonitor: string;
   tieneTeclado: boolean;
   tieneMouse: boolean;
   usuarioId: number | null;
@@ -478,6 +742,9 @@ export default defineComponent({
     const busqueda = ref("");
     const paginaActual = ref(1);
     const itemsPorPagina = 10;
+    // Agrega estas variables en el setup()
+const buscandoUsuariosOrigen = ref(false);
+const buscandoUsuariosDestino = ref(false);
     const loading = ref(true);
     const error = ref("");
     const equipoAEliminar = ref<Equipo | null>(null);
@@ -485,89 +752,52 @@ export default defineComponent({
     const equipoSeleccionado = ref<Equipo | null>(null);
     const cargandoMantenimientos = ref(false);
 
-const cargarEquipos = async () => {
-  loading.value = true;
-  error.value = "";
+    // Variables para transferencia en bloque
+    const mostrarModalTransferencia = ref(false);
+    const usuarioOrigenBusqueda = ref("");
+    const usuarioDestinoBusqueda = ref("");
+    const usuariosEncontradosOrigen = ref<Usuario[]>([]);
+    const usuariosEncontradosDestino = ref<Usuario[]>([]);
+    const mostrarListaUsuariosOrigen = ref(false);
+    const mostrarListaUsuariosDestino = ref(false);
+    const usuarioOrigenSeleccionado = ref<Usuario | null>(null);
+    const usuarioDestinoSeleccionado = ref<Usuario | null>(null);
+    const equiposUsuarioOrigen = ref<Equipo[]>([]);
+    const equiposOrigenCargando = ref(false);
+    const transferenciaEnProgreso = ref(false);
+    const equiposSeleccionados = ref<number[]>([]);
+const seleccionarTodos = ref(false);
 
-  try {
-    const response = await axios.get("/equipos");
-    // ✅ CORREGIDO - Mostrar solo equipos asignados (no en revisión/baja)
-    equipos.value = response.data.data
-      .filter((equipo: any) => {
-        // Mostrar solo equipos asignados
-        return equipo.estado_especial === "asignado";
-      })
-      .map((equipo: any) => ({
-        ...equipo,
-        tieneTeclado: Boolean(equipo.tieneTeclado),
-        tieneMouse: Boolean(equipo.tieneMouse),
-        estadoMonitor: equipo.estadoMonitor || "",
-      }));
+    const { isAdmin, isInformatica } = useAuth();
 
-    console.log("📋 Equipos asignados cargados:", equipos.value.length);
-  } catch (err: any) {
-    console.error("Error al cargar equipos:", err);
-    error.value =
-      "No se pudieron cargar los equipos. " +
-      (err.response?.data?.message || err.message || "Error desconocido");
-  } finally {
-    loading.value = false;
-  }
-};
+    const cargarEquipos = async () => {
+      loading.value = true;
+      error.value = "";
 
-    // Cargar mantenimientos para un equipo específico
-    const cargarMantenimientos = async (equipoId: number) => {
-      cargandoMantenimientos.value = true;
       try {
-        const response = await axios.get(`/equipos/${equipoId}/mantenimientos`);
-        return response.data.data;
-      } catch (err) {
-        console.error("Error al cargar mantenimientos:", err);
-        return [];
+        const response = await axios.get("/equipos");
+        equipos.value = response.data.data
+          .filter((equipo: any) => {
+            return equipo.estado_especial === "asignado";
+          })
+          .map((equipo: any) => ({
+            ...equipo,
+            tieneTeclado: Boolean(equipo.tieneTeclado),
+            tieneMouse: Boolean(equipo.tieneMouse),
+            estadoMonitor: equipo.estadoMonitor || "",
+          }));
+
+        console.log("📋 Equipos asignados cargados:", equipos.value.length);
+      } catch (err: any) {
+        console.error("Error al cargar equipos:", err);
+        error.value =
+          "No se pudieron cargar los equipos. " +
+          (err.response?.data?.message || err.message || "Error desconocido");
       } finally {
-        cargandoMantenimientos.value = false;
+        loading.value = false;
       }
     };
-const generarReporteGeneral = async () => {
-  let loadingInstance: any = null;
-  
-  try {
-    loadingInstance = ElLoading.service({
-      lock: true,
-      text: "Generando reporte general de equipos...",
-      background: "rgba(0, 0, 0, 0.7)",
-    });
 
-    const response = await axios.get(
-      `/sistema/reportes/general-equipos`, // ✅ Esta ruta ahora existe
-      {
-        responseType: "blob",
-      }
-    );
-
-    const blob = new Blob([response.data], { type: "application/pdf" });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `reporte-general-equipos-${new Date().toISOString().split('T')[0]}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-
-    if (loadingInstance) {
-      loadingInstance.close();
-    }
-    ElMessage.success("Reporte general generado exitosamente");
-  } catch (error: any) {
-    console.error("Error al generar reporte general:", error);
-    
-    if (loadingInstance) {
-      loadingInstance.close();
-    }
-    ElMessage.error("Error al generar el reporte general PDF");
-  }
-};
     // Computed properties
     const equiposFiltrados = computed(() => {
       if (!busqueda.value.trim()) return equipos.value;
@@ -597,13 +827,206 @@ const generarReporteGeneral = async () => {
       Math.ceil(equiposFiltrados.value.length / itemsPorPagina)
     );
 
-    // Métodos
+    // Computed para validar transferencia
+const puedeTransferir = computed(() => {
+  return (
+    usuarioOrigenSeleccionado.value &&
+    usuarioDestinoSeleccionado.value &&
+    usuarioOrigenSeleccionado.value.id !== usuarioDestinoSeleccionado.value.id &&
+    equiposSeleccionadosCount.value > 0  // ✅ Ahora valida que haya seleccionados
+  );
+});
+
+    // Métodos para transferencia en bloque
+    const abrirModalTransferencia = () => {
+      mostrarModalTransferencia.value = true;
+      usuarioOrigenSeleccionado.value = null;
+      usuarioDestinoSeleccionado.value = null;
+      equiposUsuarioOrigen.value = [];
+      usuarioOrigenBusqueda.value = "";
+      usuarioDestinoBusqueda.value = "";
+    };
+
+  const cerrarModalTransferencia = () => {
+  mostrarModalTransferencia.value = false;
+  usuarioOrigenSeleccionado.value = null;
+  usuarioDestinoSeleccionado.value = null;
+  equiposUsuarioOrigen.value = [];
+  equiposSeleccionados.value = []; // ✅ Limpiar selección
+  seleccionarTodos.value = false;  // ✅ Limpiar "seleccionar todos"
+  usuarioOrigenBusqueda.value = "";
+  usuarioDestinoBusqueda.value = "";
+};
+
+
+    const toggleSeleccionarTodos = () => {
+  if (seleccionarTodos.value) {
+    equiposSeleccionados.value = equiposUsuarioOrigen.value.map(equipo => equipo.id);
+  } else {
+    equiposSeleccionados.value = [];
+  }
+};
+
+const estaSeleccionado = (equipoId: number) => {
+  return equiposSeleccionados.value.includes(equipoId);
+};
+const buscarUsuariosOrigen = async () => {
+  const searchTerm = usuarioOrigenBusqueda.value.trim();
+  
+  // Mostrar lista si hay texto
+  if (searchTerm.length > 0) {
+    mostrarListaUsuariosOrigen.value = true;
+  } else {
+    mostrarListaUsuariosOrigen.value = false;
+    usuariosEncontradosOrigen.value = [];
+    return;
+  }
+  
+  // Buscar si hay al menos 2 caracteres
+  if (searchTerm.length >= 2) {
+    buscandoUsuariosOrigen.value = true;
+    try {
+      // Enviar el término de búsqueda como parámetro único
+      const response = await axios.get('/buscar-usuarios', {
+        params: { search: searchTerm }
+      });
+      usuariosEncontradosOrigen.value = response.data.data || [];
+    } catch (error) {
+      console.error("Error al buscar usuarios origen:", error);
+      usuariosEncontradosOrigen.value = [];
+    } finally {
+      buscandoUsuariosOrigen.value = false;
+    }
+  } else {
+    usuariosEncontradosOrigen.value = [];
+  }
+};
+
+const buscarUsuariosDestino = async () => {
+  // MOSTRAR la lista cuando se empiece a escribir
+  mostrarListaUsuariosDestino.value = true;
+  
+  if (usuarioDestinoBusqueda.value.length > 2) {
+    buscandoUsuariosDestino.value = true;
+    try {
+      const searchTerm = usuarioDestinoBusqueda.value;
+      const params = new URLSearchParams({
+        nombres: searchTerm,
+        apellidos: searchTerm,
+        dni: searchTerm
+      });
+      
+      const response = await axios.get(`/buscar-usuarios?${params}`);
+      usuariosEncontradosDestino.value = response.data.data;
+    } catch (error) {
+      console.error("Error al buscar usuarios destino:", error);
+      usuariosEncontradosDestino.value = [];
+    } finally {
+      buscandoUsuariosDestino.value = false;
+    }
+  } else {
+    usuariosEncontradosDestino.value = [];
+    buscandoUsuariosDestino.value = false;
+  }
+};
+
+    const seleccionarUsuarioOrigen = async (usuario: Usuario) => {
+      usuarioOrigenSeleccionado.value = usuario;
+      usuarioOrigenBusqueda.value = `${usuario.nombres} ${usuario.apellidos} (${usuario.dni})`;
+      mostrarListaUsuariosOrigen.value = false;
+      
+      await cargarEquiposUsuarioOrigen(usuario.id);
+    };
+
+    const seleccionarUsuarioDestino = (usuario: Usuario) => {
+      usuarioDestinoSeleccionado.value = usuario;
+      usuarioDestinoBusqueda.value = `${usuario.nombres} ${usuario.apellidos} (${usuario.dni})`;
+      mostrarListaUsuariosDestino.value = false;
+    };
+
+const cargarEquiposUsuarioOrigen = async (usuarioId: number) => {
+  equiposOrigenCargando.value = true;
+  equiposSeleccionados.value = []; // ✅ Resetear selección
+  seleccionarTodos.value = false;  // ✅ Resetear "seleccionar todos"
+  try {
+    const response = await axios.get(`/equipos/usuario/${usuarioId}`);
+    equiposUsuarioOrigen.value = response.data.data || [];
+  } catch (error) {
+    console.error("Error al cargar equipos del usuario:", error);
+    equiposUsuarioOrigen.value = [];
+    ElMessage.error("Error al cargar equipos del usuario");
+  } finally {
+    equiposOrigenCargando.value = false;
+  }
+};
+
+ const confirmarTransferencia = async () => {
+  if (!puedeTransferir.value) return;
+
+  const confirmacion = confirm(
+    // ✅ CAMBIA equiposUsuarioOrigen.length por equiposSeleccionadosCount
+    `¿Estás seguro de transferir ${equiposSeleccionadosCount.value} equipo(s) de ${usuarioOrigenSeleccionado.value?.nombres} a ${usuarioDestinoSeleccionado.value?.nombres}?`
+  );
+
+  if (!confirmacion) return;
+
+  await ejecutarTransferencia();
+};
+
+
+
+const ejecutarTransferencia = async () => {
+  transferenciaEnProgreso.value = true;
+  let loadingInstance: any = null;
+
+  try {
+    loadingInstance = ElLoading.service({
+      lock: true,
+      text: `Transferiendo ${equiposSeleccionadosCount.value} equipo(s)...`, // ✅ Usar contador de seleccionados
+      background: "rgba(0, 0, 0, 0.7)",
+    });
+
+    // ✅ CAMBIA esta línea - usar equipos seleccionados en lugar de todos
+    await axios.post("/equipos/transferencia-bloque", {
+      usuarioOrigenId: usuarioOrigenSeleccionado.value?.id,
+      usuarioDestinoId: usuarioDestinoSeleccionado.value?.id,
+      equipoIds: equiposSeleccionados.value  // ✅ Solo los seleccionados
+    });
+
+    if (loadingInstance) {
+      loadingInstance.close();
+    }
+
+    ElMessage.success(
+      `Transferencia completada: ${equiposSeleccionadosCount.value} equipo(s) transferidos exitosamente` // ✅ Usar contador de seleccionados
+    );
+
+    await cargarEquipos();
+    cerrarModalTransferencia();
+
+  } catch (error: any) {
+    console.error("Error en transferencia en bloque:", error);
+    
+    if (loadingInstance) {
+      loadingInstance.close();
+    }
+
+    ElMessage.error(
+      error.response?.data?.error || "Error al realizar la transferencia en bloque"
+    );
+  } finally {
+    transferenciaEnProgreso.value = false;
+  }
+};
+
+    // Métodos existentes
     const cambiarPagina = (pagina: number) => {
       if (pagina >= 1 && pagina <= totalPaginas.value) {
         paginaActual.value = pagina;
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
     };
+const equiposSeleccionadosCount = computed(() => equiposSeleccionados.value.length);
 
     const getBadgeClass = (tipo: string) => {
       const tipos: Record<string, string> = {
@@ -625,8 +1048,6 @@ const generarReporteGeneral = async () => {
       return estados[estado] || "text-gray-600";
     };
 
-    
-
     const formatFecha = (fecha: string) => {
       return new Date(fecha).toLocaleDateString("es-ES", {
         year: "numeric",
@@ -637,6 +1058,19 @@ const generarReporteGeneral = async () => {
 
     const editarEquipo = (equipo: Equipo) => {
       router.push(`/editar/${equipo.id}`);
+    };
+
+    const cargarMantenimientos = async (equipoId: number) => {
+      cargandoMantenimientos.value = true;
+      try {
+        const response = await axios.get(`/equipos/${equipoId}/mantenimientos`);
+        return response.data.data;
+      } catch (err) {
+        console.error("Error al cargar mantenimientos:", err);
+        return [];
+      } finally {
+        cargandoMantenimientos.value = false;
+      }
     };
 
     const verMantenimientos = async (equipo: Equipo) => {
@@ -687,7 +1121,6 @@ const generarReporteGeneral = async () => {
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet("Equipos");
 
-        // Columnas
         worksheet.columns = [
           { header: "ID", key: "id", width: 10 },
           { header: "Tipo", key: "tipo", width: 15 },
@@ -718,7 +1151,6 @@ const generarReporteGeneral = async () => {
           { header: "DNI Usuario", key: "dniUsuario", width: 15 },
         ];
 
-        // Estilo cabeceras
         worksheet.getRow(1).eachCell((cell) => {
           cell.fill = {
             type: "pattern",
@@ -734,7 +1166,6 @@ const generarReporteGeneral = async () => {
           };
         });
 
-        // Datos
         equipos.value.forEach((equipo, index) => {
           const row = worksheet.addRow({
             id: equipo.id,
@@ -764,7 +1195,6 @@ const generarReporteGeneral = async () => {
             dniUsuario: equipo.usuario?.dni || "-",
           });
 
-          // Estilo filas alternadas
           row.fill = {
             type: "pattern",
             pattern: "solid",
@@ -772,7 +1202,6 @@ const generarReporteGeneral = async () => {
           };
         });
 
-        // Autoajustar columnas
         worksheet.columns.forEach((column) => {
           if (column.values) {
             let maxLength = 0;
@@ -788,7 +1217,6 @@ const generarReporteGeneral = async () => {
           }
         });
 
-        // Generar y descargar archivo
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], {
           type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -808,7 +1236,6 @@ const generarReporteGeneral = async () => {
         error.value = "Error al exportar equipos a Excel";
       }
     };
-const { isAdmin, isInformatica } = useAuth();
 
     const enviarARevision = async (equipo: Equipo) => {
       if (
@@ -828,49 +1255,88 @@ const { isAdmin, isInformatica } = useAuth();
       }
     };
 
-const generarReporte = async (equipo: Equipo) => {
-  let loadingInstance: any = null; // ✅ Declarar la instancia
-  
-  try {
-    loadingInstance = ElLoading.service({  // ✅ Usar nombre diferente
-      lock: true,
-      text: "Generando reporte PDF...",
-      background: "rgba(0, 0, 0, 0.7)",
-    });
+    const generarReporteGeneral = async () => {
+      let loadingInstance: any = null;
+      
+      try {
+        loadingInstance = ElLoading.service({
+          lock: true,
+          text: "Generando reporte general de equipos...",
+          background: "rgba(0, 0, 0, 0.7)",
+        });
 
-    const response = await axios.get(
-      `/sistema/reportes/equipo/${equipo.id}`,
-      {
-        responseType: "blob",
+        const response = await axios.get(
+          `/sistema/reportes/general-equipos`,
+          {
+            responseType: "blob",
+          }
+        );
+
+        const blob = new Blob([response.data], { type: "application/pdf" });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `reporte-general-equipos-${new Date().toISOString().split('T')[0]}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        if (loadingInstance) {
+          loadingInstance.close();
+        }
+        ElMessage.success("Reporte general generado exitosamente");
+      } catch (error: any) {
+        console.error("Error al generar reporte general:", error);
+        
+        if (loadingInstance) {
+          loadingInstance.close();
+        }
+        ElMessage.error("Error al generar el reporte general PDF");
       }
-    );
+    };
 
-    const blob = new Blob([response.data], { type: "application/pdf" });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `reporte-equipo-${equipo.codigoPatrimonial || equipo.id}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
+    const generarReporte = async (equipo: Equipo) => {
+      let loadingInstance: any = null;
+      
+      try {
+        loadingInstance = ElLoading.service({
+          lock: true,
+          text: "Generando reporte PDF...",
+          background: "rgba(0, 0, 0, 0.7)",
+        });
 
-    // ✅ Cerrar correctamente
-    if (loadingInstance) {
-      loadingInstance.close();
-    }
-    ElMessage.success("Reporte generado exitosamente");
-  } catch (error: any) {
-    console.error("Error al generar reporte:", error);
-    
-    // ✅ Cerrar también en caso de error
-    if (loadingInstance) {
-      loadingInstance.close();
-    }
-    ElMessage.error("Error al generar el reporte PDF");
-  }
-};
-    // Cargar datos al montar el componente
+        const response = await axios.get(
+          `/sistema/reportes/equipo/${equipo.id}`,
+          {
+            responseType: "blob",
+          }
+        );
+
+        const blob = new Blob([response.data], { type: "application/pdf" });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `reporte-equipo-${equipo.codigoPatrimonial || equipo.id}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        if (loadingInstance) {
+          loadingInstance.close();
+        }
+        ElMessage.success("Reporte generado exitosamente");
+      } catch (error: any) {
+        console.error("Error al generar reporte:", error);
+        
+        if (loadingInstance) {
+          loadingInstance.close();
+        }
+        ElMessage.error("Error al generar el reporte PDF");
+      }
+    };
+
     onMounted(cargarEquipos);
 
     return {
@@ -888,6 +1354,33 @@ const generarReporte = async (equipo: Equipo) => {
       equiposPaginados,
       isInformatica,
       isAdmin,
+      // Transferencia en bloque
+      mostrarModalTransferencia,
+      usuarioOrigenBusqueda,
+      usuarioDestinoBusqueda,
+      usuariosEncontradosOrigen,
+      usuariosEncontradosDestino,
+      mostrarListaUsuariosOrigen,
+      mostrarListaUsuariosDestino,
+      usuarioOrigenSeleccionado,
+      usuarioDestinoSeleccionado,
+      equiposUsuarioOrigen,
+      equiposOrigenCargando,
+      transferenciaEnProgreso,
+      puedeTransferir,
+        equiposSeleccionados,
+  seleccionarTodos,
+  equiposSeleccionadosCount,
+  toggleSeleccionarTodos,
+  estaSeleccionado,
+      abrirModalTransferencia,
+      cerrarModalTransferencia,
+      buscarUsuariosOrigen,
+      buscarUsuariosDestino,
+      seleccionarUsuarioOrigen,
+      seleccionarUsuarioDestino,
+      confirmarTransferencia,
+      // Métodos existentes
       enviarARevision,
       generarReporteGeneral,
       generarReporte,
@@ -917,6 +1410,14 @@ const generarReporte = async (equipo: Equipo) => {
   @apply inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
+.btn-warning {
+  @apply inline-flex items-center justify-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-info {
+  @apply inline-flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
 .btn-action {
   @apply inline-flex items-center justify-center p-2 rounded-full transition-colors focus:outline-none;
 }
@@ -925,12 +1426,12 @@ const generarReporte = async (equipo: Equipo) => {
   @apply px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
 }
 
-.btn-warning {
-  @apply inline-flex items-center justify-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
-}
-
 .btn-confirm {
   @apply px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-confirm-bulk {
+  @apply px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 .input-search {
