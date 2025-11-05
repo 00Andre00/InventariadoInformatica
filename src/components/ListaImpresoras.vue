@@ -9,13 +9,13 @@
         <router-link to="/impresoras/agregar" class="btn-primary">
           <i class="fas fa-plus mr-2"></i> Agregar Impresora
         </router-link>
-        <button
+        <!-- <button
           @click="exportarImpresoras"
           class="btn-success"
           :disabled="impresoras.length === 0"
         >
           <i class="fas fa-file-export mr-2"></i> Exportar
-        </button>
+        </button> -->
         <!-- NUEVO BOTÓN PARA REPORTE GENERAL -->
         <button
           @click="generarReporteGeneralImpresoras"
@@ -570,7 +570,7 @@ import { defineComponent, ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 import { ElLoading, ElMessage } from "element-plus";
-import ExcelJS from "exceljs";
+// import ExcelJS from "exceljs";
 import { useAuth } from "@/composables/useAuth";
 import { useLoading } from "@/composables/useLoading";
 
@@ -991,117 +991,117 @@ export default defineComponent({
       }
     };
 
-    const exportarImpresoras = async () => {
-      if (impresoras.value.length === 0) {
-        ElMessage.warning("No hay impresoras para exportar");
-        return;
-      }
+    // const exportarImpresoras = async () => {
+    //   if (impresoras.value.length === 0) {
+    //     ElMessage.warning("No hay impresoras para exportar");
+    //     return;
+    //   }
 
-      const { startLoading, stopLoading } = useLoading();
+    //   const { startLoading, stopLoading } = useLoading();
 
-      try {
-        startLoading({ text: "Generando archivo Excel..." });
+    //   try {
+    //     startLoading({ text: "Generando archivo Excel..." });
 
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet("Impresoras");
+    //     const workbook = new ExcelJS.Workbook();
+    //     const worksheet = workbook.addWorksheet("Impresoras");
 
-        worksheet.columns = [
-          { header: "ID", key: "id", width: 10 },
-          { header: "Marca", key: "marca", width: 20 },
-          { header: "Modelo", key: "modelo", width: 25 },
-          { header: "Serie", key: "serie", width: 20 },
-          { header: "IP", key: "ip", width: 15 },
-          { header: "MAC", key: "mac", width: 20 },
-          { header: "Oficina", key: "oficina", width: 20 },
-          { header: "Código Patrimonial", key: "codigoPatrimonial", width: 20 },
-          { header: "Tipo", key: "tipo", width: 15 },
-          { header: "Conexión", key: "conexion", width: 15 },
-          { header: "Estado", key: "estado", width: 15 },
-          { header: "Estado Especial", key: "estado_especial", width: 15 },
-          { header: "Usuario", key: "usuario", width: 30 },
-          { header: "DNI Usuario", key: "dniUsuario", width: 15 },
-        ];
+    //     worksheet.columns = [
+    //       { header: "ID", key: "id", width: 10 },
+    //       { header: "Marca", key: "marca", width: 20 },
+    //       { header: "Modelo", key: "modelo", width: 25 },
+    //       { header: "Serie", key: "serie", width: 20 },
+    //       { header: "IP", key: "ip", width: 15 },
+    //       { header: "MAC", key: "mac", width: 20 },
+    //       { header: "Oficina", key: "oficina", width: 20 },
+    //       { header: "Código Patrimonial", key: "codigoPatrimonial", width: 20 },
+    //       { header: "Tipo", key: "tipo", width: 15 },
+    //       { header: "Conexión", key: "conexion", width: 15 },
+    //       { header: "Estado", key: "estado", width: 15 },
+    //       { header: "Estado Especial", key: "estado_especial", width: 15 },
+    //       { header: "Usuario", key: "usuario", width: 30 },
+    //       { header: "DNI Usuario", key: "dniUsuario", width: 15 },
+    //     ];
 
-        worksheet.getRow(1).eachCell((cell) => {
-          cell.fill = {
-            type: "pattern",
-            pattern: "solid",
-            fgColor: { argb: "FF3B82F6" },
-          };
-          cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
-          cell.border = {
-            top: { style: "thin", color: { argb: "FF1E40AF" } },
-            bottom: { style: "thin", color: { argb: "FF1E40AF" } },
-            left: { style: "thin", color: { argb: "FF1E40AF" } },
-            right: { style: "thin", color: { argb: "FF1E40AF" } },
-          };
-        });
+    //     worksheet.getRow(1).eachCell((cell) => {
+    //       cell.fill = {
+    //         type: "pattern",
+    //         pattern: "solid",
+    //         fgColor: { argb: "FF3B82F6" },
+    //       };
+    //       cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    //       cell.border = {
+    //         top: { style: "thin", color: { argb: "FF1E40AF" } },
+    //         bottom: { style: "thin", color: { argb: "FF1E40AF" } },
+    //         left: { style: "thin", color: { argb: "FF1E40AF" } },
+    //         right: { style: "thin", color: { argb: "FF1E40AF" } },
+    //       };
+    //     });
 
-        impresoras.value.forEach((impresora, index) => {
-          const row = worksheet.addRow({
-            id: impresora.id,
-            marca: impresora.marca || "-",
-            modelo: impresora.modelo,
-            serie: impresora.serie || "-",
-            ip: impresora.ip || "-",
-            mac: impresora.mac || "-",
-            oficina: impresora.oficina,
-            codigoPatrimonial: impresora.codigoPatrimonial || "-",
-            tipo: impresora.tipo || "-",
-            conexion: impresora.conexion || "-",
-            estado: impresora.estado || "-",
-            estado_especial: impresora.estado_especial || "-",
-            usuario: impresora.usuario
-              ? `${impresora.usuario.nombres} ${impresora.usuario.apellidos}`
-              : "Sin asignar",
-            dniUsuario: impresora.usuario?.dni || "-",
-          });
+    //     impresoras.value.forEach((impresora, index) => {
+    //       const row = worksheet.addRow({
+    //         id: impresora.id,
+    //         marca: impresora.marca || "-",
+    //         modelo: impresora.modelo,
+    //         serie: impresora.serie || "-",
+    //         ip: impresora.ip || "-",
+    //         mac: impresora.mac || "-",
+    //         oficina: impresora.oficina,
+    //         codigoPatrimonial: impresora.codigoPatrimonial || "-",
+    //         tipo: impresora.tipo || "-",
+    //         conexion: impresora.conexion || "-",
+    //         estado: impresora.estado || "-",
+    //         estado_especial: impresora.estado_especial || "-",
+    //         usuario: impresora.usuario
+    //           ? `${impresora.usuario.nombres} ${impresora.usuario.apellidos}`
+    //           : "Sin asignar",
+    //         dniUsuario: impresora.usuario?.dni || "-",
+    //       });
 
-          row.fill = {
-            type: "pattern",
-            pattern: "solid",
-            fgColor: { argb: index % 2 === 0 ? "FFF3F4F6" : "FFFFFFFF" },
-          };
-        });
+    //       row.fill = {
+    //         type: "pattern",
+    //         pattern: "solid",
+    //         fgColor: { argb: index % 2 === 0 ? "FFF3F4F6" : "FFFFFFFF" },
+    //       };
+    //     });
 
-        worksheet.columns.forEach((column) => {
-          if (column.values) {
-            let maxLength = 0;
-            column.values.forEach((value: any) => {
-              if (value !== null && value !== undefined) {
-                const length = String(value).length;
-                if (length > maxLength) {
-                  maxLength = length;
-                }
-              }
-            });
-            column.width = Math.min(Math.max(maxLength + 2, 10), 30);
-          }
-        });
+    //     worksheet.columns.forEach((column) => {
+    //       if (column.values) {
+    //         let maxLength = 0;
+    //         column.values.forEach((value: any) => {
+    //           if (value !== null && value !== undefined) {
+    //             const length = String(value).length;
+    //             if (length > maxLength) {
+    //               maxLength = length;
+    //             }
+    //           }
+    //         });
+    //         column.width = Math.min(Math.max(maxLength + 2, 10), 30);
+    //       }
+    //     });
 
-        const buffer = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buffer], {
-          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        });
+    //     const buffer = await workbook.xlsx.writeBuffer();
+    //     const blob = new Blob([buffer], {
+    //       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    //     });
 
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `impresoras_${
-          new Date().toISOString().split("T")[0]
-        }.xlsx`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
+    //     const link = document.createElement("a");
+    //     link.href = URL.createObjectURL(blob);
+    //     link.download = `impresoras_${
+    //       new Date().toISOString().split("T")[0]
+    //     }.xlsx`;
+    //     document.body.appendChild(link);
+    //     link.click();
+    //     document.body.removeChild(link);
+    //     URL.revokeObjectURL(link.href);
 
-        ElMessage.success("Archivo Excel generado exitosamente");
-      } catch (err) {
-        console.error("Error al exportar impresoras:", err);
-        ElMessage.error("Error al exportar impresoras a Excel");
-      } finally {
-        stopLoading();
-      }
-    };
+    //     ElMessage.success("Archivo Excel generado exitosamente");
+    //   } catch (err) {
+    //     console.error("Error al exportar impresoras:", err);
+    //     ElMessage.error("Error al exportar impresoras a Excel");
+    //   } finally {
+    //     stopLoading();
+    //   }
+    // };
 
     // Cargar datos al montar el componente
     onMounted(() => {
@@ -1158,7 +1158,7 @@ export default defineComponent({
       confirmarEliminacion,
       cancelarEliminacion,
       eliminarImpresora,
-      exportarImpresoras,
+      // exportarImpresoras,
       getEstadoClass,
     };
   },
