@@ -7,13 +7,13 @@
         <router-link to="/agregar" class="btn-primary">
           <i class="fas fa-plus mr-2"></i> Agregar Equipo
         </router-link>
-        <button
+        <!-- <button
           @click="exportarEquipos"
           class="btn-success"
           :disabled="equipos.length === 0"
         >
           <i class="fas fa-file-export mr-2"></i> Exportar Excel
-        </button>
+        </button> -->
         <button
           @click="generarReporteGeneral"
           class="btn-warning"
@@ -687,7 +687,7 @@ import { defineComponent, ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 import { ElLoading, ElMessage } from "element-plus";
-import ExcelJS from "exceljs";
+// import ExcelJS from "exceljs";
 import { useAuth } from "@/composables/useAuth";
 
 import "../interceptors/axios";
@@ -1111,131 +1111,131 @@ const equiposSeleccionadosCount = computed(() => equiposSeleccionados.value.leng
       }
     };
 
-    const exportarEquipos = async () => {
-      if (equipos.value.length === 0) {
-        alert("No hay equipos para exportar");
-        return;
-      }
+    // const exportarEquipos = async () => {
+    //   if (equipos.value.length === 0) {
+    //     alert("No hay equipos para exportar");
+    //     return;
+    //   }
 
-      try {
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet("Equipos");
+    //   try {
+    //     const workbook = new ExcelJS.Workbook();
+    //     const worksheet = workbook.addWorksheet("Equipos");
 
-        worksheet.columns = [
-          { header: "ID", key: "id", width: 10 },
-          { header: "Tipo", key: "tipo", width: 15 },
-          { header: "Marca", key: "marca", width: 20 },
-          { header: "Modelo", key: "modelo", width: 20 },
-          { header: "Procesador", key: "procesador", width: 25 },
-          { header: "RAM", key: "ram", width: 15 },
-          { header: "Almacenamiento", key: "almacenamiento", width: 20 },
-          { header: "Oficina", key: "oficina", width: 20 },
-          { header: "IP", key: "ip", width: 15 },
-          { header: "MAC", key: "mac", width: 20 },
-          { header: "Código Patrimonial", key: "codigoPatrimonial", width: 20 },
-          { header: "Sistema Operativo", key: "so", width: 20 },
-          { header: "Versión Office", key: "officeVersion", width: 20 },
-          { header: "Antivirus", key: "antivirus", width: 20 },
-          { header: "Estado Equipo", key: "estado", width: 15 },
-          { header: "Marca Monitor", key: "marcaMonitor", width: 20 },
-          { header: "Pulgadas Monitor", key: "pulgadasMonitor", width: 15 },
-          {
-            header: "Código Monitor",
-            key: "codigoPatrimonialMonitor",
-            width: 20,
-          },
-          { header: "Estado Monitor", key: "estadoMonitor", width: 15 },
-          { header: "Tiene Teclado", key: "tieneTeclado", width: 15 },
-          { header: "Tiene Mouse", key: "tieneMouse", width: 15 },
-          { header: "Usuario", key: "usuario", width: 30 },
-          { header: "DNI Usuario", key: "dniUsuario", width: 15 },
-        ];
+    //     worksheet.columns = [
+    //       { header: "ID", key: "id", width: 10 },
+    //       { header: "Tipo", key: "tipo", width: 15 },
+    //       { header: "Marca", key: "marca", width: 20 },
+    //       { header: "Modelo", key: "modelo", width: 20 },
+    //       { header: "Procesador", key: "procesador", width: 25 },
+    //       { header: "RAM", key: "ram", width: 15 },
+    //       { header: "Almacenamiento", key: "almacenamiento", width: 20 },
+    //       { header: "Oficina", key: "oficina", width: 20 },
+    //       { header: "IP", key: "ip", width: 15 },
+    //       { header: "MAC", key: "mac", width: 20 },
+    //       { header: "Código Patrimonial", key: "codigoPatrimonial", width: 20 },
+    //       { header: "Sistema Operativo", key: "so", width: 20 },
+    //       { header: "Versión Office", key: "officeVersion", width: 20 },
+    //       { header: "Antivirus", key: "antivirus", width: 20 },
+    //       { header: "Estado Equipo", key: "estado", width: 15 },
+    //       { header: "Marca Monitor", key: "marcaMonitor", width: 20 },
+    //       { header: "Pulgadas Monitor", key: "pulgadasMonitor", width: 15 },
+    //       {
+    //         header: "Código Monitor",
+    //         key: "codigoPatrimonialMonitor",
+    //         width: 20,
+    //       },
+    //       { header: "Estado Monitor", key: "estadoMonitor", width: 15 },
+    //       { header: "Tiene Teclado", key: "tieneTeclado", width: 15 },
+    //       { header: "Tiene Mouse", key: "tieneMouse", width: 15 },
+    //       { header: "Usuario", key: "usuario", width: 30 },
+    //       { header: "DNI Usuario", key: "dniUsuario", width: 15 },
+    //     ];
 
-        worksheet.getRow(1).eachCell((cell) => {
-          cell.fill = {
-            type: "pattern",
-            pattern: "solid",
-            fgColor: { argb: "FF3B82F6" },
-          };
-          cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
-          cell.border = {
-            top: { style: "thin", color: { argb: "FF1E40AF" } },
-            bottom: { style: "thin", color: { argb: "FF1E40AF" } },
-            left: { style: "thin", color: { argb: "FF1E40AF" } },
-            right: { style: "thin", color: { argb: "FF1E40AF" } },
-          };
-        });
+    //     worksheet.getRow(1).eachCell((cell) => {
+    //       cell.fill = {
+    //         type: "pattern",
+    //         pattern: "solid",
+    //         fgColor: { argb: "FF3B82F6" },
+    //       };
+    //       cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    //       cell.border = {
+    //         top: { style: "thin", color: { argb: "FF1E40AF" } },
+    //         bottom: { style: "thin", color: { argb: "FF1E40AF" } },
+    //         left: { style: "thin", color: { argb: "FF1E40AF" } },
+    //         right: { style: "thin", color: { argb: "FF1E40AF" } },
+    //       };
+    //     });
 
-        equipos.value.forEach((equipo, index) => {
-          const row = worksheet.addRow({
-            id: equipo.id,
-            tipo: equipo.tipo,
-            marca: equipo.marca,
-            modelo: equipo.modelo,
-            procesador: equipo.procesador,
-            ram: equipo.ram,
-            almacenamiento: equipo.almacenamiento,
-            oficina: equipo.oficina,
-            ip: equipo.ip,
-            mac: equipo.mac,
-            codigoPatrimonial: equipo.codigoPatrimonial || "-",
-            so: equipo.so || "-",
-            officeVersion: equipo.officeVersion || "-",
-            antivirus: equipo.antivirus || "-",
-            estado: equipo.estado || "-",
-            marcaMonitor: equipo.marcaMonitor || "-",
-            pulgadasMonitor: equipo.pulgadasMonitor || "-",
-            codigoPatrimonialMonitor: equipo.codigoPatrimonialMonitor || "-",
-            estadoMonitor: equipo.estadoMonitor || "-",
-            tieneTeclado: equipo.tieneTeclado ? "Sí" : "No",
-            tieneMouse: equipo.tieneMouse ? "Sí" : "No",
-            usuario: equipo.usuario
-              ? `${equipo.usuario.nombres} ${equipo.usuario.apellidos}`
-              : "Sin asignar",
-            dniUsuario: equipo.usuario?.dni || "-",
-          });
+    //     equipos.value.forEach((equipo, index) => {
+    //       const row = worksheet.addRow({
+    //         id: equipo.id,
+    //         tipo: equipo.tipo,
+    //         marca: equipo.marca,
+    //         modelo: equipo.modelo,
+    //         procesador: equipo.procesador,
+    //         ram: equipo.ram,
+    //         almacenamiento: equipo.almacenamiento,
+    //         oficina: equipo.oficina,
+    //         ip: equipo.ip,
+    //         mac: equipo.mac,
+    //         codigoPatrimonial: equipo.codigoPatrimonial || "-",
+    //         so: equipo.so || "-",
+    //         officeVersion: equipo.officeVersion || "-",
+    //         antivirus: equipo.antivirus || "-",
+    //         estado: equipo.estado || "-",
+    //         marcaMonitor: equipo.marcaMonitor || "-",
+    //         pulgadasMonitor: equipo.pulgadasMonitor || "-",
+    //         codigoPatrimonialMonitor: equipo.codigoPatrimonialMonitor || "-",
+    //         estadoMonitor: equipo.estadoMonitor || "-",
+    //         tieneTeclado: equipo.tieneTeclado ? "Sí" : "No",
+    //         tieneMouse: equipo.tieneMouse ? "Sí" : "No",
+    //         usuario: equipo.usuario
+    //           ? `${equipo.usuario.nombres} ${equipo.usuario.apellidos}`
+    //           : "Sin asignar",
+    //         dniUsuario: equipo.usuario?.dni || "-",
+    //       });
 
-          row.fill = {
-            type: "pattern",
-            pattern: "solid",
-            fgColor: { argb: index % 2 === 0 ? "FFF3F4F6" : "FFFFFFFF" },
-          };
-        });
+    //       row.fill = {
+    //         type: "pattern",
+    //         pattern: "solid",
+    //         fgColor: { argb: index % 2 === 0 ? "FFF3F4F6" : "FFFFFFFF" },
+    //       };
+    //     });
 
-        worksheet.columns.forEach((column) => {
-          if (column.values) {
-            let maxLength = 0;
-            column.values.forEach((value: any) => {
-              if (value !== null && value !== undefined) {
-                const length = String(value).length;
-                if (length > maxLength) {
-                  maxLength = length;
-                }
-              }
-            });
-            column.width = Math.min(Math.max(maxLength + 2, 10), 30);
-          }
-        });
+    //     worksheet.columns.forEach((column) => {
+    //       if (column.values) {
+    //         let maxLength = 0;
+    //         column.values.forEach((value: any) => {
+    //           if (value !== null && value !== undefined) {
+    //             const length = String(value).length;
+    //             if (length > maxLength) {
+    //               maxLength = length;
+    //             }
+    //           }
+    //         });
+    //         column.width = Math.min(Math.max(maxLength + 2, 10), 30);
+    //       }
+    //     });
 
-        const buffer = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buffer], {
-          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        });
+    //     const buffer = await workbook.xlsx.writeBuffer();
+    //     const blob = new Blob([buffer], {
+    //       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    //     });
 
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `equipos_${
-          new Date().toISOString().split("T")[0]
-        }.xlsx`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
-      } catch (err) {
-        console.error("Error al exportar equipos:", err);
-        error.value = "Error al exportar equipos a Excel";
-      }
-    };
+    //     const link = document.createElement("a");
+    //     link.href = URL.createObjectURL(blob);
+    //     link.download = `equipos_${
+    //       new Date().toISOString().split("T")[0]
+    //     }.xlsx`;
+    //     document.body.appendChild(link);
+    //     link.click();
+    //     document.body.removeChild(link);
+    //     URL.revokeObjectURL(link.href);
+    //   } catch (err) {
+    //     console.error("Error al exportar equipos:", err);
+    //     error.value = "Error al exportar equipos a Excel";
+    //   }
+    // };
 
     const enviarARevision = async (equipo: Equipo) => {
       if (
@@ -1395,7 +1395,7 @@ const equiposSeleccionadosCount = computed(() => equiposSeleccionados.value.leng
       confirmarEliminacion,
       cancelarEliminacion,
       eliminarEquipo,
-      exportarEquipos,
+      // exportarEquipos,
     };
   },
 });
