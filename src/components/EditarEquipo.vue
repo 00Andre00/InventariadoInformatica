@@ -427,21 +427,34 @@ export default defineComponent({
     const route = useRoute();
     const router = useRouter();
 
-    const buscarUsuarios = async () => {
-      if (usuarioBusqueda.value.length > 2) {
-        try {
-          const response = await axios.get(
-            `/buscar-usuarios?nombres=${usuarioBusqueda.value}`
-          );
-          usuariosEncontrados.value = response.data.data;
-        } catch (error) {
-          console.error("Error al buscar usuarios:", error);
-          usuariosEncontrados.value = [];
-        }
-      } else {
-        usuariosEncontrados.value = [];
-      }
-    };
+const buscarUsuarios = async () => {
+  const searchTerm = usuarioBusqueda.value.trim();
+  
+  // Mostrar lista si hay texto
+  if (searchTerm.length > 0) {
+    mostrarListaUsuarios.value = true;
+  } else {
+    mostrarListaUsuarios.value = false;
+    usuariosEncontrados.value = [];
+    return;
+  }
+  
+  // Buscar si hay al menos 2 caracteres
+  if (searchTerm.length >= 2) {
+    try {
+      // Usar parámetro único 'search' que busca en nombres, apellidos y DNI
+      const response = await axios.get('/buscar-usuarios', {
+        params: { search: searchTerm }
+      });
+      usuariosEncontrados.value = response.data.data || [];
+    } catch (error) {
+      console.error("Error al buscar usuarios:", error);
+      usuariosEncontrados.value = [];
+    }
+  } else {
+    usuariosEncontrados.value = [];
+  }
+};
 
     const seleccionarUsuario = (usuario: Usuario) => {
       equipo.value.usuarioId = usuario.id;
