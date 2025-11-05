@@ -413,47 +413,63 @@ export default defineComponent({
     };
 
     // FUNCIONES DE REPORTES PDF CORREGIDAS - USANDO LOS MISMOS ENDPOINTS QUE LISTAIMPRESORAS
-    const generarReporteEquipo = async (equipo: EquipoRevision) => {
-      let loadingInstance: any = null;
-      
-      try {
-        loadingInstance = ElLoading.service({
-          lock: true,
-          text: "Generando reporte PDF...",
-          background: "rgba(0, 0, 0, 0.7)",
-        });
+ const generarReporteEquipo = async (equipo: EquipoRevision) => {
+  let loadingInstance: any = null;
+  
+  try {
+    loadingInstance = ElLoading.service({
+      lock: true,
+      text: "Generando reporte PDF...",
+      background: "rgba(0, 0, 0, 0.7)",
+    });
 
-    // ✅ RUTA CORRECTA - SIN /cambio/
-const response = await axios.get(
-  `/sistema/reportes/equipo/${equipo.id}`,
-  {
-    responseType: "blob",
+    // ✅ INTENTAR CON /cambio/ PRIMERO (para equipos en revisión)
+    try {
+      const response = await axios.get(
+        `/sistema/reportes/cambio/equipo/${equipo.id}`,
+        { responseType: "blob" }
+      );
+
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `reporte-equipo-revision-${equipo.codigoPatrimonial || equipo.id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      ElMessage.success("Reporte del equipo generado exitosamente");
+    } catch (cambioError: any) {
+      // ✅ SI FALLA, INTENTAR SIN /cambio/ (fallback)
+      const response = await axios.get(
+        `/sistema/reportes/equipo/${equipo.id}`,
+        { responseType: "blob" }
+      );
+
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `reporte-equipo-revision-${equipo.codigoPatrimonial || equipo.id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      ElMessage.success("Reporte del equipo generado exitosamente");
+    }
+
+  } catch (error: any) {
+    console.error("Error al generar reporte del equipo:", error);
+    ElMessage.error("Error al generar el reporte del equipo");
+  } finally {
+    if (loadingInstance) {
+      loadingInstance.close();
+    }
   }
-);
-
-        const blob = new Blob([response.data], { type: "application/pdf" });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `reporte-equipo-revision-${equipo.codigoPatrimonial || equipo.id}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-
-        if (loadingInstance) {
-          loadingInstance.close();
-        }
-        ElMessage.success("Reporte del equipo generado exitosamente");
-      } catch (error: any) {
-        console.error("Error al generar reporte del equipo:", error);
-        
-        if (loadingInstance) {
-          loadingInstance.close();
-        }
-        ElMessage.error("Error al generar el reporte del equipo");
-      }
-    };
+};
 
     const generarReporteImpresora = async (impresora: ImpresoraRevision) => {
       let loadingInstance: any = null;
@@ -465,9 +481,8 @@ const response = await axios.get(
           background: "rgba(0, 0, 0, 0.7)",
         });
 
-      // ✅ RUTA CORRECTA - SIN /cambio/
 const response = await axios.get(
-  `/sistema/reportes/impresora/${impresora.id}`,
+  `/sistema/reportes/cambio/impresora/${impresora.id}`,
   {
     responseType: "blob",
   }
