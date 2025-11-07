@@ -310,23 +310,34 @@ export default defineComponent({
       }
     };
 
-    const buscarUsuarios = async () => {
-      if (usuarioBusqueda.value.length > 2) {
-        try {
-          const response = await axios.get(
-            `/buscar-usuarios?nombres=${usuarioBusqueda.value}`
-          );
-          usuariosEncontrados.value = response.data.data;
-          mostrarListaUsuarios.value = true;
-        } catch (error) {
-          console.error("Error al buscar usuarios:", error);
-          usuariosEncontrados.value = [];
-        }
-      } else {
-        usuariosEncontrados.value = [];
-      }
-    };
-
+const buscarUsuarios = async () => {
+  const searchTerm = usuarioBusqueda.value.trim();
+  
+  // Mostrar lista si hay texto
+  if (searchTerm.length > 0) {
+    mostrarListaUsuarios.value = true;
+  } else {
+    mostrarListaUsuarios.value = false;
+    usuariosEncontrados.value = [];
+    return;
+  }
+  
+  // Buscar si hay al menos 2 caracteres
+  if (searchTerm.length >= 2) {
+    try {
+      // ✅ CORREGIDO: Usar el mismo parámetro 'search' que en equipos
+      const response = await axios.get('/buscar-usuarios', {
+        params: { search: searchTerm }
+      });
+      usuariosEncontrados.value = response.data.data || [];
+    } catch (error) {
+      console.error("Error al buscar usuarios:", error);
+      usuariosEncontrados.value = [];
+    }
+  } else {
+    usuariosEncontrados.value = [];
+  }
+};
     const seleccionarUsuario = (usuario: Usuario) => {
       impresora.value.usuarioId = usuario.id;
       impresora.value.oficina = usuario.oficina;
